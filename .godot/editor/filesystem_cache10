@@ -7,11 +7,11 @@ dungeon_wall.png::CompressedTexture2D::8185516359749783150::1776136919::17761371
 ::res://assets/dungeon_crawl/::1776137139
 DungeonCrawl_ProjectUtumnoTileset.png::CompressedTexture2D::8639670078678695576::1776136843::1776137139::1::::<><><>0<>0<>d929c7173f7f5391aaafbcea92e1b883<>res://.godot/imported/DungeonCrawl_ProjectUtumnoTileset.png-74bdf88e34b6f7939cd5b41b663d19ac.ctex::
 ::res://assets/player/::1776137568
-sarah_attack_0.png::CompressedTexture2D::8053974961843122923::1776137331::1776137568::1::::<><><>0<>0<>99468f7045af7d289e71c7ae9a023496<>res://.godot/imported/sarah_attack_0.png-a1d0d5fc950e809004cb6f0437af4e1a.ctex::
-sarah_attack_1.png::CompressedTexture2D::6401836377062038449::1776137331::1776137568::1::::<><><>0<>0<>9294f67cd733494e4b429a76a24f093f<>res://.godot/imported/sarah_attack_1.png-ce6b4f55ebe03e1d539c18a3390177f4.ctex::
-sarah_attack_2.png::CompressedTexture2D::1622529745313519469::1776137331::1776137568::1::::<><><>0<>0<>273d48ac3e7ccaa36fa2592593192721<>res://.godot/imported/sarah_attack_2.png-3d1f961ded1a265a88efc94fd8290d6c.ctex::
-sarah_attack_3.png::CompressedTexture2D::725244370189439498::1776137331::1776137568::1::::<><><>0<>0<>a155a445cb5156066ef2ac1a89bfc6cd<>res://.godot/imported/sarah_attack_3.png-029f5b3059f7eb92d8eb06d4f643b546.ctex::
-sarah_attack_4.png::CompressedTexture2D::9054421443626651505::1776137331::1776137568::1::::<><><>0<>0<>11a37088ca310b42630dbcbf5e77cd76<>res://.godot/imported/sarah_attack_4.png-3985ec005bcc2c45cd947e2c01b80b2e.ctex::
+sarah_attack_0.png::CompressedTexture2D::8053974961843122923::1776137775::1776137816::1::::<><><>0<>0<>99468f7045af7d289e71c7ae9a023496<>res://.godot/imported/sarah_attack_0.png-a1d0d5fc950e809004cb6f0437af4e1a.ctex::
+sarah_attack_1.png::CompressedTexture2D::6401836377062038449::1776137775::1776137816::1::::<><><>0<>0<>9294f67cd733494e4b429a76a24f093f<>res://.godot/imported/sarah_attack_1.png-ce6b4f55ebe03e1d539c18a3390177f4.ctex::
+sarah_attack_2.png::CompressedTexture2D::1622529745313519469::1776137775::1776137816::1::::<><><>0<>0<>273d48ac3e7ccaa36fa2592593192721<>res://.godot/imported/sarah_attack_2.png-3d1f961ded1a265a88efc94fd8290d6c.ctex::
+sarah_attack_3.png::CompressedTexture2D::725244370189439498::1776137775::1776137816::1::::<><><>0<>0<>a155a445cb5156066ef2ac1a89bfc6cd<>res://.godot/imported/sarah_attack_3.png-029f5b3059f7eb92d8eb06d4f643b546.ctex::
+sarah_attack_4.png::CompressedTexture2D::9054421443626651505::1776137775::1776137816::1::::<><><>0<>0<>11a37088ca310b42630dbcbf5e77cd76<>res://.godot/imported/sarah_attack_4.png-3985ec005bcc2c45cd947e2c01b80b2e.ctex::
 sarah_base.png::CompressedTexture2D::214392123750409020::1776137076::1776137138::1::::<><><>0<>0<>dc0a85a5484a7ae53e83ac6cc4f60c9a<>res://.godot/imported/sarah_base.png-6131d3186702662ed7876f1e05d16a05.ctex::
 sarah_walk_0.png::CompressedTexture2D::4572132851885277816::1776137076::1776137140::1::::<><><>0<>0<>755fb9a77d327954a0d4d26d69b1548f<>res://.godot/imported/sarah_walk_0.png-e3144c077652e40f0b8c0c89d01183d0.s3tc.ctex::
 sarah_walk_1.png::CompressedTexture2D::2174685542781343231::1776137076::1776137138::1::::<><><>0<>0<>580326ecf668061a68bd91e93cff89aa<>res://.godot/imported/sarah_walk_1.png-e4b7ddd62a32b8c9c7476ce9fd062c37.ctex::
@@ -36,4 +36,4 @@ main.tscn::PackedScene::-1::1776137205::0::1::::<><><>0<>0<><>::res://scenes/pla
 player.tscn::PackedScene::-1::1776137350::0::1::::<><><>0<>0<><>::res://scripts/player.gd<>res://assets/player/sarah_walk_0.png<>res://assets/player/sarah_walk_1.png<>res://assets/player/sarah_walk_2.png<>res://assets/player/sarah_walk_3.png
 ::res://scripts/::1776137138
 camera.gd::GDScript::6946173247588720331::1776050001::0::1::::<>Camera3D<><>0<>0<><>::
-player.gd::GDScript::6493846094639370626::1776137374::0::1::::<>CharacterBody3D<><>0<>0<><>::
+player.gd::GDScript::6493846094639370626::1776137620::0::1::::<>CharacterBody3D<><>0<>0<><>::
