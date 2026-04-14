@@ -1,9 +1,9 @@
 extends CharacterBody3D
 
 const SPEED := 7.0
-const ROTATION_SPEED := 10.0
 
 @onready var nav_agent: NavigationAgent3D = $NavigationAgent3D
+@onready var sprite: AnimatedSprite3D = $Sprite
 
 var _moving := false
 
@@ -12,6 +12,7 @@ func _ready() -> void:
 	nav_agent.path_desired_distance = 0.5
 	nav_agent.target_desired_distance = 0.5
 	nav_agent.navigation_finished.connect(_on_navigation_finished)
+	sprite.play("idle")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -30,22 +31,23 @@ func _handle_click(screen_pos: Vector2) -> void:
 
 	var space_state := get_world_3d().direct_space_state
 	var query := PhysicsRayQueryParameters3D.create(from, to)
-	# Only hit the ground (layer 1); player is on layer 2
 	query.collision_mask = 1
 
 	var result := space_state.intersect_ray(query)
 	if result:
 		nav_agent.target_position = result.position
 		_moving = true
+		sprite.play("walk")
 
 
-func _physics_process(delta: float) -> void:
+func _physics_process(_delta: float) -> void:
 	if not _moving:
 		return
 
 	if nav_agent.is_navigation_finished():
 		_moving = false
 		velocity = Vector3.ZERO
+		sprite.play("idle")
 		return
 
 	var next_pos := nav_agent.get_next_path_position()
@@ -53,8 +55,8 @@ func _physics_process(delta: float) -> void:
 	direction.y = 0
 
 	if direction.length() > 0.01:
-		var target_angle := atan2(direction.x, direction.z)
-		rotation.y = lerp_angle(rotation.y, target_angle, ROTATION_SPEED * delta)
+		# Flip sprite based on horizontal movement direction
+		sprite.flip_h = direction.x < 0
 
 	velocity = direction * SPEED
 	move_and_slide()
@@ -63,3 +65,4 @@ func _physics_process(delta: float) -> void:
 func _on_navigation_finished() -> void:
 	_moving = false
 	velocity = Vector3.ZERO
+	sprite.play("idle")
