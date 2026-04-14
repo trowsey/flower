@@ -62,7 +62,7 @@ func _handle_attack(screen_pos: Vector2) -> void:
 		query.collision_mask = 1
 		var result := space_state.intersect_ray(query)
 		if result:
-			var dir := (result.position - global_position).normalized()
+			var dir: Vector3 = (result.position - global_position).normalized()
 			sprite.flip_h = dir.x < 0
 
 	# Stop movement and play attack
