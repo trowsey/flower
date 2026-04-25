@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Flower"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/ui/character_select.tscn"
 config/features=PackedStringArray("4.6")
 
 [display]
@@ -24,6 +24,7 @@ window/size/viewport_height=720
 DemonManager="*res://scripts/demon_manager.gd"
 HitFeedback="*res://scripts/vfx/hit_feedback.gd"
 TransitionManager="*res://scripts/transition_manager.gd"
+PartyConfig="*res://scripts/party_config.gd"
 
 [input]
 

@@ -13,6 +13,7 @@ const MAX_LEVEL := 50
 @export var base_max_soul: float = 100.0
 @export var base_move_speed: float = 7.0
 @export var base_defense: float = 0.0
+@export var base_soul_drain_resist: float = 0.0
 
 var modifiers: Dictionary = {}
 
@@ -52,7 +53,15 @@ func defense() -> float:
 
 
 func soul_drain_resist() -> float:
-	return modifiers.get("soul_drain_resist", 0.0)
+	return base_soul_drain_resist + modifiers.get("soul_drain_resist", 0.0)
+
+
+func notify_changed() -> void:
+	stats_changed.emit()
+
+
+func xp_to_next_level() -> float:
+	return xp_required_for_level(level + 1)
 
 
 func set_modifiers(new_mods: Dictionary) -> void:

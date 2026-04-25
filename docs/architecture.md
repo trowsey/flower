@@ -254,6 +254,15 @@ a specific change, you don't have a real concern yet.
 We do not maintain a heavyweight ADR process. Instead, when a non-obvious
 choice is made, add a one-paragraph entry here. New entries go on top.
 
+### ADR-008: PartyConfig autoload (4th singleton)
+*Why:* Character selections and per-player device assignments must survive
+the scene transition from `character_select.tscn` to `main.tscn`. The
+alternatives (passing a Resource via `set_meta`, querying the previous
+scene) were more fragile than a single read-only-after-character-select
+data carrier. PartyConfig holds **only configuration**, never per-frame
+mutable state, which is why it's an acceptable singleton. The autoload
+budget (Section 2.4) is now exhausted; a 5th requires a new ADR.
+
 ### ADR-007: PlayerStats is a Resource, not a node
 *Why:* Stats are data. Making them a Resource lets us serialize, save, and
 unit-test them without a SceneTree. The Player owns the resource.

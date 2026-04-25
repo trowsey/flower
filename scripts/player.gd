@@ -5,6 +5,7 @@
 # - Stats from equipment/leveling
 # - Inventory and gold
 # - Skill hotbar integration
+# - Multi-player: device_id selects controller; player_index 0 owns mouse/keyboard
 extends CharacterBody3D
 
 const STICK_DEADZONE := 0.2
@@ -31,6 +32,13 @@ signal stats_recalculated
 signal combo_advanced(stage: int)
 signal item_picked_up(item: ItemResource)
 signal player_died(reason: String)
+
+# Multiplayer config — set before _ready (or via setup()).
+# player_index: 0 for P1 (mouse + first controller), 1 for P2 (controller only), etc.
+# device_id: -1 = listen to all devices (default for solo/P1); otherwise filter joypad input.
+@export var player_index: int = 0
+@export var device_id: int = -1
+@export var character_class_id: int = -1  # -1 = no class chosen yet
 
 @onready var nav_agent: NavigationAgent3D = $NavigationAgent3D
 @onready var sprite: AnimatedSprite3D = $Sprite
@@ -64,6 +72,8 @@ var _combo_window_open: bool = false
 
 func _ready() -> void:
 	add_to_group("player")
+	# Each player also joins a per-index group for targeted lookups (HUD, autobot)
+	add_to_group("player_%d" % player_index)
 	collision_layer = 2
 	collision_mask = 1
 
@@ -77,6 +87,17 @@ func _ready() -> void:
 	equipment.equipment_changed.connect(_on_equipment_changed)
 	stats.stats_changed.connect(_on_stats_changed)
 	stats.level_changed.connect(_on_level_changed)
+
+	# Apply chosen character class (if any)
+	if character_class_id >= 0:
+		var cls = load("res://scripts/items/character_class.gd").by_id(character_class_id)
+		cls.apply_to_stats(stats)
+		# Equip signature skill in slot 0
+		skills[0] = cls.make_signature_skill()
+		# Tint placeholder sprite
+		if sprite:
+			sprite.modulate = cls.primary_color
+
 	var starter := ItemFactory.make_starter_weapon()
 	equipment.set_equipped(ItemResource.ItemType.WEAPON, starter)
 
@@ -90,6 +111,29 @@ func _ready() -> void:
 	max_soul_changed.emit(stats.max_soul())
 	health_changed.emit(health)
 	soul_changed.emit(soul)
+
+
+func setup(p_index: int, p_device: int, p_class_id: int = -1) -> void:
+	player_index = p_index
+	device_id = p_device
+	character_class_id = p_class_id
+
+
+# --- Input device helpers ---
+
+func _owns_event(event: InputEvent) -> bool:
+	# When device_id == -1, this player accepts anything (single-player mode).
+	# Otherwise, joypad events must match our device_id.
+	if device_id < 0:
+		return true
+	if event is InputEventJoypadButton or event is InputEventJoypadMotion:
+		return event.device == device_id
+	# Keyboard/mouse only owned by player_index 0
+	return player_index == 0
+
+
+func _is_primary_player() -> bool:
+	return player_index == 0
 
 
 # --- State helpers ---
@@ -110,13 +154,16 @@ func _set_state(new_state: int) -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not is_alive():
 		return
+	if not _owns_event(event):
+		return
 	if state == PlayerState.BEING_DRAINED:
 		# Only attack input is allowed while latched
 		if event.is_action_pressed("attack"):
 			_handle_controller_attack()
 		return
 
-	if event is InputEventMouseButton and event.pressed:
+	# Mouse only available to primary player (device_id < 0 or player_index 0)
+	if _is_primary_player() and event is InputEventMouseButton and event.pressed:
 		if event.button_index == MOUSE_BUTTON_LEFT:
 			if not _attacking:
 				_direct_move = false
@@ -173,10 +220,24 @@ func _handle_mouse_attack(screen_pos: Vector2) -> void:
 # --- Controller input ---
 
 func _get_stick_input() -> Vector3:
-	var input_dir := Vector2(
-		Input.get_axis("move_left", "move_right"),
-		Input.get_axis("move_up", "move_down")
-	)
+	var input_dir: Vector2
+	if device_id < 0:
+		# Single-player / primary mode: use action map (kbd + any joy)
+		input_dir = Vector2(
+			Input.get_axis("move_left", "move_right"),
+			Input.get_axis("move_up", "move_down")
+		)
+	else:
+		# Multi-player: read this player's joypad axes directly
+		var x: float = Input.get_joy_axis(device_id, JOY_AXIS_LEFT_X)
+		var y: float = Input.get_joy_axis(device_id, JOY_AXIS_LEFT_Y)
+		# Also accept keyboard for player_index 0
+		if player_index == 0:
+			x += Input.get_axis("move_left", "move_right")
+			y += Input.get_axis("move_up", "move_down")
+			x = clamp(x, -1.0, 1.0)
+			y = clamp(y, -1.0, 1.0)
+		input_dir = Vector2(x, y)
 	if input_dir.length() < STICK_DEADZONE:
 		return Vector3.ZERO
 	return Vector3(input_dir.x, 0.0, input_dir.y).normalized()
@@ -542,3 +603,61 @@ func _on_pickup_area_entered(area: Area3D) -> void:
 		area.collect(self)
 	elif area.is_in_group("item_pickup") and area.has_method("collect"):
 		area.collect(self)
+
+
+# --- Signature skill implementations ---
+
+func _skill_whirling_blade(_skill: SkillResource) -> void:
+	# Sarah: spin attack hitting all nearby enemies
+	if attack_area == null:
+		return
+	attack_shape.disabled = false
+	attack_area.monitoring = true
+	for body in attack_area.get_overlapping_bodies():
+		if body.is_in_group("enemies") and body.has_method("take_damage"):
+			body.take_damage(stats.attack_damage() * 1.5)
+	await get_tree().create_timer(0.2).timeout
+	if is_instance_valid(self) and attack_shape:
+		attack_shape.disabled = true
+		attack_area.monitoring = false
+
+
+func _skill_ground_pound(_skill: SkillResource) -> void:
+	# Maddie: AoE shockwave
+	var radius := 4.0
+	for body in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(body):
+			continue
+		if body.global_position.distance_to(global_position) <= radius and body.has_method("take_damage"):
+			body.take_damage(stats.attack_damage() * 2.0)
+	if has_node("/root/HitFeedback"):
+		var hf := get_node("/root/HitFeedback")
+		if hf.has_method("explosion"):
+			hf.explosion(global_position, radius)
+
+
+func _skill_soul_bolt(_skill: SkillResource) -> void:
+	# Chan Xaic: hit nearest enemy
+	var nearest: Node3D = null
+	var best_dist := 12.0
+	for body in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(body):
+			continue
+		var d: float = body.global_position.distance_to(global_position)
+		if d < best_dist:
+			nearest = body
+			best_dist = d
+	if nearest and nearest.has_method("take_damage"):
+		nearest.take_damage(stats.attack_damage() * 2.5)
+
+
+func _skill_ward_pulse(_skill: SkillResource) -> void:
+	# Aiyana: heal all players in range
+	var radius := 5.0
+	for p in get_tree().get_nodes_in_group("player"):
+		if not is_instance_valid(p):
+			continue
+		if p.global_position.distance_to(global_position) <= radius:
+			p.health = min(p.health + 20.0, p.stats.max_health())
+			if p.has_signal("health_changed"):
+				p.health_changed.emit(p.health)
