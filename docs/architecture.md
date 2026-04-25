@@ -92,9 +92,9 @@ fight the engine. If the engine offers a built-in (e.g. `Tween`,
 
 ```
                 ┌──────────────────────────────────────┐
-                │            Autoloads                 │
+                │            Autoloads (4)             │
                 │  DemonManager / HitFeedback /        │
-                │       TransitionManager              │
+                │  TransitionManager / PartyConfig     │
                 └──────────────────────────────────────┘
                           ▲       ▲       ▲
                           │ signals │ signals │
@@ -111,11 +111,15 @@ fight the engine. If the engine offers a built-in (e.g. `Tween`,
         ▼                                                   ▼
    ┌──────────────┐  ┌──────────────┐  ┌────────────────────────┐
    │     UI       │  │    World     │  │    E2E Autobot         │
-   │ HealthOrbs/  │  │ DungeonGen,  │  │ Headless playthrough   │
-   │ Hotbar/      │  │ FogOfWar,    │  │ + screenshot capture   │
-   │ Minimap/     │  │ Pickups,     │  └────────────────────────┘
-   │ Inventory    │  │ Destructible │
+   │ HUD/Hotbar/  │  │ DungeonGen,  │  │ Headless playthrough   │
+   │ Minimap/     │  │ FogOfWar,    │  │ + screenshot capture   │
+   │ Inventory/   │  │ Pickups,     │  └────────────────────────┘
+   │ LevelUp/     │  │ Destructible │
+   │ Tutorial     │  │              │
    └──────────────┘  └──────────────┘
+
+         Menu chain (entry → game):
+         main_menu  →  player_count  →  character_select  →  main
 ```
 
 Three independent surfaces touch the player:
@@ -253,6 +257,15 @@ a specific change, you don't have a real concern yet.
 
 We do not maintain a heavyweight ADR process. Instead, when a non-obvious
 choice is made, add a one-paragraph entry here. New entries go on top.
+
+### ADR-009: Settings as a static module, not an autoload
+*Why:* Settings (audio bus levels, fullscreen, gameplay toggles) is *pure*
+state on disk plus pure read/write functions. It has no per-frame logic, no
+signals, no internal state to keep alive. Making it an autoload would burn
+budget for nothing — instead it is `scripts/settings.gd`, a script with only
+static methods loaded by callers via `const SettingsScript = preload(...)`.
+This pattern is allowed for any data-only "module" that does not need a node
+in the tree.
 
 ### ADR-008: PartyConfig autoload (4th singleton)
 *Why:* Character selections and per-player device assignments must survive
