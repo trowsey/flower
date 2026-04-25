@@ -15,6 +15,10 @@ const SPAWN_RING_RADIUS := 12.0
 const BASE_ENEMIES := 6  # solo baseline
 const PER_PLAYER_BONUS := 4  # + per extra player
 const WAVE_RESPAWN_DELAY := 8.0
+const RunStatsScript := preload("res://scripts/run_stats.gd")
+const TutorialScript := preload("res://scripts/ui/tutorial_overlay.gd")
+const InventoryScreenScript := preload("res://scripts/ui/inventory_screen.gd")
+const LevelUpPanelScript := preload("res://scripts/ui/level_up_panel.gd")
 
 const SPAWN_OFFSETS := [
 	Vector3(0, 0.5, 0),
@@ -25,11 +29,33 @@ const SPAWN_OFFSETS := [
 
 var _wave_timer: float = 0.0
 var _player_count: int = 1
+var current_wave: int = 1
+var run_stats: RunStats = null
+signal wave_started(wave: int)
+signal wave_cleared(wave: int)
 
 
 func _ready() -> void:
 	# Apply persisted settings
 	SettingsScript.load_and_apply()
+
+	# Run stats tracker
+	run_stats = RunStatsScript.new()
+	run_stats.name = "RunStats"
+	add_child(run_stats)
+
+	# Tutorial overlay (auto-hides if seen before)
+	var tut: CanvasLayer = TutorialScript.new()
+	tut.name = "TutorialOverlay"
+	add_child(tut)
+
+	# Inventory & level-up overlays
+	var inv: CanvasLayer = InventoryScreenScript.new()
+	inv.name = "InventoryScreen"
+	add_child(inv)
+	var lvl: CanvasLayer = LevelUpPanelScript.new()
+	lvl.name = "LevelUpPanel"
+	add_child(lvl)
 
 	# Defaults if PartyConfig wasn't set (e.g. running main.tscn directly)
 	var slots: Array = PartyConfig.slots
@@ -62,6 +88,18 @@ func _ready() -> void:
 		p.global_position = SPAWN_OFFSETS[i % SPAWN_OFFSETS.size()]
 		_apply_class(p)
 
+	# Wire run-stats signal connections
+	for p in get_tree().get_nodes_in_group("player"):
+		if p.has_signal("level_up"):
+			p.level_up.connect(func(lv): run_stats.record_level(lv))
+		if p.has_signal("gold_changed"):
+			var prev: int = p.gold
+			p.gold_changed.connect(func(v):
+				if v > prev:
+					run_stats.record_gold(v - prev)
+				prev = v
+			)
+
 	# Spawn first wave after a short delay so HUD/scene settle
 	await get_tree().create_timer(0.5).timeout
 	_spawn_wave()
@@ -73,25 +111,48 @@ func _process(delta: float) -> void:
 		_wave_timer += delta
 		if _wave_timer >= WAVE_RESPAWN_DELAY:
 			_wave_timer = 0.0
+			if run_stats:
+				run_stats.record_wave_cleared()
+			emit_signal("wave_cleared", current_wave)
+			current_wave += 1
+			_spawn_wave()
 			_spawn_wave()
 	else:
 		_wave_timer = 0.0
 
 
 func _spawn_wave() -> void:
-	var count: int = BASE_ENEMIES + (_player_count - 1) * PER_PLAYER_BONUS
+	var count: int = BASE_ENEMIES + (_player_count - 1) * PER_PLAYER_BONUS + (current_wave - 1) * 2
 	var avg_level: float = _avg_player_level()
+	var wave_mult: float = 1.0 + (current_wave - 1) * 0.10
+	var force_elite_index: int = -1
+	if current_wave % 5 == 0:
+		force_elite_index = randi() % count
 	for i in count:
 		var scene_path: String = ENEMY_SCENES[i % ENEMY_SCENES.size()]
 		var scene := load(scene_path)
 		if scene == null:
 			continue
 		var enemy: Node3D = scene.instantiate()
-		_scale_enemy_for_difficulty(enemy, avg_level)
+		_scale_enemy_for_difficulty(enemy, avg_level, wave_mult)
+		if i == force_elite_index and "elite" in enemy:
+			enemy.elite = true
 		var angle: float = (TAU / float(count)) * i + randf() * 0.3
 		var pos := Vector3(cos(angle), 0, sin(angle)) * SPAWN_RING_RADIUS
 		add_child(enemy)
 		enemy.global_position = pos + Vector3(0, 0.5, 0)
+		# Hook tree_exiting once for kill stats
+		enemy.tree_exiting.connect(func(): _on_enemy_removed(enemy))
+	emit_signal("wave_started", current_wave)
+
+
+func _on_enemy_removed(e: Node) -> void:
+	if not is_instance_valid(e) or run_stats == null:
+		return
+	# Only counts if it died (had health <= 0); spawn-cleanup also fires this
+	# but for now treat any removal as a kill — close enough.
+	var is_elite: bool = e.get("elite") if "elite" in e else false
+	run_stats.record_kill(is_elite)
 
 
 func _avg_player_level() -> float:
@@ -104,14 +165,15 @@ func _avg_player_level() -> float:
 	return total / float(players.size())
 
 
-func _scale_enemy_for_difficulty(e: Node, avg_level: float) -> void:
-	# +15% HP and +10% damage per player level above 1, +25% HP per extra player
+func _scale_enemy_for_difficulty(e: Node, avg_level: float, wave_mult: float = 1.0) -> void:
+	# +15% HP and +10% damage per player level above 1, +25% HP per extra player,
+	# +10% per wave past 1.
 	var lvl_mult: float = 1.0 + max(0.0, avg_level - 1.0) * 0.15
 	var coop_mult: float = 1.0 + (_player_count - 1) * 0.25
 	if "max_health" in e:
-		e.max_health *= lvl_mult * coop_mult
+		e.max_health *= lvl_mult * coop_mult * wave_mult
 	if "damage" in e:
-		e.damage *= 1.0 + max(0.0, avg_level - 1.0) * 0.10
+		e.damage *= (1.0 + max(0.0, avg_level - 1.0) * 0.10) * wave_mult
 	if "health" in e and "max_health" in e:
 		e.health = e.max_health
 

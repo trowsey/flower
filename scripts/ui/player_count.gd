@@ -24,28 +24,20 @@ func _ready() -> void:
 	Input.joy_connection_changed.connect(_on_joy_changed)
 
 
-func _process(_delta: float) -> void:
-	# Watch for any joy event from a non-zero device
-	pass
-
-
 func _unhandled_input(event: InputEvent) -> void:
-	# Esc backs out
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
 		_back()
 		return
-	# Joypad B / Circle backs out
 	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_B:
 		_back()
 		return
-	# Press any button on joypad >0 to register P2
+	# Press any button on a 2nd joypad to register P2 readiness
 	if event is InputEventJoypadButton and event.pressed and event.device > 0:
 		_second_controller_ready = true
 		_refresh()
 
 
 func _on_joy_changed(_device: int, _connected: bool) -> void:
-	# When another controller plugs in/out, update hint text
 	_refresh()
 
 

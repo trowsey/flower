@@ -168,12 +168,6 @@ func _is_confirm_pressed(event: InputEvent, _slot: int) -> bool:
 	return false
 
 
-func _is_start_pressed(event: InputEvent) -> bool:
-	if event is InputEventJoypadButton and event.pressed:
-		return event.button_index == JOY_BUTTON_START
-	return false
-
-
 func _check_all_ready() -> void:
 	var n: int = 2 if _two_player else 1
 	for i in n:

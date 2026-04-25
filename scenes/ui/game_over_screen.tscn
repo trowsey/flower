@@ -19,11 +19,15 @@ offset_bottom = 120.0
 [node name="VBox" type="VBoxContainer" parent="Panel"]
 
 [node name="Title" type="Label" parent="Panel/VBox"]
-text = "DEFEATED"
+text = "YOU FELL"
+horizontal_alignment = 1
+
+[node name="Recap" type="Label" parent="Panel/VBox"]
+text = ""
 horizontal_alignment = 1
 
 [node name="Retry" type="Button" parent="Panel/VBox"]
 text = "Retry"
 
 [node name="QuitToMenu" type="Button" parent="Panel/VBox"]
-text = "Quit to Character Select"
+text = "Quit to Menu"

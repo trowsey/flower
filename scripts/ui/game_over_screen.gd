@@ -6,6 +6,7 @@ extends CanvasLayer
 @onready var _panel: Control = $Panel
 @onready var _retry_btn: Button = $Panel/VBox/Retry
 @onready var _menu_btn: Button = $Panel/VBox/QuitToMenu
+@onready var _recap: Label = get_node_or_null("Panel/VBox/Recap")
 
 
 func _ready() -> void:
@@ -40,6 +41,10 @@ func _all_dead() -> bool:
 
 
 func _show() -> void:
+	if _recap:
+		var stats: Node = get_tree().current_scene.get_node_or_null("RunStats")
+		if stats and stats.has_method("summary"):
+			_recap.text = stats.summary()
 	_panel.visible = true
 	get_tree().paused = true
 
@@ -51,4 +56,4 @@ func _retry() -> void:
 
 func _to_menu() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/ui/character_select.tscn")
+	get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")

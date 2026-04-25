@@ -2,6 +2,8 @@
 # Vertical button stack with controller / keyboard navigation.
 extends Control
 
+const SettingsScript = preload("res://scripts/settings.gd")
+
 const PLAYER_COUNT_SCENE := "res://scenes/ui/player_count.tscn"
 const SETTINGS_SCENE := "res://scenes/ui/settings_menu.tscn"
 const CREDITS_SCENE := "res://scenes/ui/credits.tscn"
@@ -14,6 +16,7 @@ const CREDITS_SCENE := "res://scenes/ui/credits.tscn"
 
 
 func _ready() -> void:
+	SettingsScript.load_and_apply()
 	_new_btn.pressed.connect(_new_game)
 	_settings_btn.pressed.connect(_open_settings)
 	_credits_btn.pressed.connect(_open_credits)

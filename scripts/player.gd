@@ -484,6 +484,17 @@ func equip_item(slot_index: int) -> bool:
 	return true
 
 
+func unequip_item(slot_type: int) -> bool:
+	var equipped := equipment.get_equipped(slot_type)
+	if equipped == null:
+		return false
+	if inventory.is_full():
+		return false
+	equipment.set_equipped(slot_type, null)
+	inventory.add(equipped)
+	return true
+
+
 func add_xp(amount: float) -> void:
 	xp_gained.emit(amount)
 	var levels := stats.add_xp(amount)
