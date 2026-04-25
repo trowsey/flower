@@ -11,6 +11,7 @@ const ENEMY_SCENES := [
 	"res://scenes/enemies/skitterer.tscn",
 	"res://scenes/enemies/brute.tscn",
 ]
+const BiomeManagerScript := preload("res://scripts/world/biome_manager.gd")
 const SPAWN_RING_RADIUS := 12.0
 const BASE_ENEMIES := 6  # solo baseline
 const PER_PLAYER_BONUS := 4  # + per extra player
@@ -31,8 +32,10 @@ var _wave_timer: float = 0.0
 var _player_count: int = 1
 var current_wave: int = 1
 var run_stats: RunStats = null
+var biome_manager: BiomeManager = null
 signal wave_started(wave: int)
 signal wave_cleared(wave: int)
+signal biome_changed(biome: Resource)
 
 
 func _ready() -> void:
@@ -43,6 +46,13 @@ func _ready() -> void:
 	run_stats = RunStatsScript.new()
 	run_stats.name = "RunStats"
 	add_child(run_stats)
+
+	# Biome rotation
+	biome_manager = BiomeManagerScript.new()
+	biome_manager.name = "BiomeManager"
+	add_child(biome_manager)
+	biome_manager.biome_changed.connect(_on_biome_changed)
+	_apply_biome_visuals(biome_manager.current())
 
 	# Tutorial overlay (auto-hides if seen before)
 	var tut: CanvasLayer = TutorialScript.new()
@@ -114,8 +124,9 @@ func _process(delta: float) -> void:
 			if run_stats:
 				run_stats.record_wave_cleared()
 			emit_signal("wave_cleared", current_wave)
+			if biome_manager:
+				biome_manager.notify_wave_cleared(current_wave)
 			current_wave += 1
-			_spawn_wave()
 			_spawn_wave()
 	else:
 		_wave_timer = 0.0
@@ -125,11 +136,18 @@ func _spawn_wave() -> void:
 	var count: int = BASE_ENEMIES + (_player_count - 1) * PER_PLAYER_BONUS + (current_wave - 1) * 2
 	var avg_level: float = _avg_player_level()
 	var wave_mult: float = 1.0 + (current_wave - 1) * 0.10
+	if biome_manager:
+		wave_mult *= 1.0 + 0.20 * float(biome_manager.difficulty_loop)
 	var force_elite_index: int = -1
 	if current_wave % 5 == 0:
 		force_elite_index = randi() % count
+	var pool: Array = ENEMY_SCENES
+	if biome_manager:
+		var biome_pool: Array = biome_manager.enemy_pool()
+		if biome_pool.size() > 0:
+			pool = biome_pool
 	for i in count:
-		var scene_path: String = ENEMY_SCENES[i % ENEMY_SCENES.size()]
+		var scene_path: String = pool[i % pool.size()]
 		var scene := load(scene_path)
 		if scene == null:
 			continue
@@ -192,3 +210,37 @@ func _apply_class(p: Node) -> void:
 		p.max_soul_changed.emit(p.stats.max_soul())
 		p.health_changed.emit(p.health)
 		p.soul_changed.emit(p.soul)
+
+
+func _on_biome_changed(biome: Resource) -> void:
+	_apply_biome_visuals(biome)
+	emit_signal("biome_changed", biome)
+
+
+func _apply_biome_visuals(biome: Resource) -> void:
+	if biome == null:
+		return
+	var floor_node := get_node_or_null("Floor/Mesh") as MeshInstance3D
+	if floor_node == null:
+		floor_node = get_node_or_null("Floor") as MeshInstance3D
+	if floor_node:
+		var fmat := StandardMaterial3D.new()
+		fmat.albedo_color = biome.floor_color
+		floor_node.material_override = fmat
+	for wall_name in ["WallNorth", "WallSouth", "WallEast", "WallWest"]:
+		var wall := get_node_or_null("%s/Mesh" % wall_name) as MeshInstance3D
+		if wall == null:
+			wall = get_node_or_null(wall_name) as MeshInstance3D
+		if wall:
+			var wmat := StandardMaterial3D.new()
+			wmat.albedo_color = biome.wall_color
+			wall.material_override = wmat
+	var env := get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if env and env.environment:
+		env.environment.ambient_light_color = biome.ambient_color
+
+
+func current_biome() -> Resource:
+	if biome_manager:
+		return biome_manager.current()
+	return null

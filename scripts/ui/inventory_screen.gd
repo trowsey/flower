@@ -15,7 +15,8 @@ var _bag_grid: GridContainer
 var _equip_slots: Dictionary = {}  # ItemType -> Button
 var _stat_label: RichTextLabel
 var _tooltip: RichTextLabel
-var _hovered_btn: Button = null
+var _hovered_btn: Button
+const ItemSetScript = preload("res://scripts/items/item_set.gd") = null
 
 
 func _ready() -> void:
@@ -266,12 +267,35 @@ func _refresh_tooltip() -> void:
 	var lines: Array = []
 	lines.append("[b][color=#%s]%s[/color][/b]" % [hex, item.item_name])
 	lines.append("[color=#%s]%s[/color]" % [hex, ItemResource.rarity_name(item.rarity)])
+	if item.item_level >= 2:
+		lines.append("[color=#aaaaaa]Item Level %d[/color]" % item.item_level)
 	if item.description != "":
 		lines.append(item.description)
 	for k in item.stat_modifiers.keys():
 		var v: float = float(item.stat_modifiers[k])
 		var sign: String = "+" if v >= 0 else ""
 		lines.append("%s%s %s" % [sign, _format_stat_value(k, v), _readable_stat(k)])
+	if item.set_id != "":
+		var set_def = ItemSetScript.by_id(item.set_id)
+		if set_def:
+			var equipped_count: int = 0
+			if player and player.equipment:
+				equipped_count = int(player.equipment.get_active_sets().get(item.set_id, 0))
+			lines.append("[color=#33cc88]%s (%d/%d)[/color]" %
+				[set_def.display_name, equipped_count, set_def.pieces.size()])
+			var sorted_thresholds: Array = set_def.bonuses.keys()
+			sorted_thresholds.sort()
+			for t in sorted_thresholds:
+				var active: bool = equipped_count >= int(t)
+				var col: String = "#33cc88" if active else "#666666"
+				var bonus: Dictionary = set_def.bonuses[t]
+				var parts: Array = []
+				for bk in bonus.keys():
+					var bv: float = float(bonus[bk])
+					parts.append("%s%s %s" %
+						["+" if bv >= 0 else "",
+						 _format_stat_value(bk, bv), _readable_stat(bk)])
+				lines.append("[color=%s](%d) %s[/color]" % [col, int(t), ", ".join(parts)])
 	_tooltip.text = "\n".join(lines)
 
 

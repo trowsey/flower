@@ -13,6 +13,8 @@ enum Rarity { COMMON, UNCOMMON, RARE, EPIC, LEGENDARY }
 @export var stat_modifiers: Dictionary = {}
 @export var consumable_effect: String = ""
 @export var consumable_amount: float = 0.0
+@export var item_level: int = 1
+@export var set_id: String = ""
 
 
 static func rarity_color(r: int) -> Color:

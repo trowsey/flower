@@ -89,9 +89,20 @@ func _spawn_item_drop() -> void:
 	var pickup: Node = pickup_scene.instantiate()
 	get_tree().current_scene.add_child(pickup)
 	pickup.global_position = global_position + Vector3(0, 0.3, 0)
-	var item := ItemFactory.make_random(-1, ItemFactory.roll_rarity(1 if elite else 0))
+	var item_level: int = _current_item_level()
+	# Try set drop first (rare)
+	var item: ItemResource = ItemFactory.maybe_make_set_item(item_level)
+	if item == null:
+		item = ItemFactory.make_random(-1, ItemFactory.roll_rarity(1 if elite else 0), item_level)
 	if pickup.has_method("set_item"):
 		pickup.set_item(item)
+
+
+func _current_item_level() -> int:
+	var main := get_tree().current_scene
+	if main and "current_wave" in main:
+		return 1 + int(main.current_wave) / 2
+	return 1
 
 
 func _spawn_blood_particles() -> void:

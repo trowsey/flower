@@ -142,17 +142,32 @@ func _wire_main_signals() -> void:
 	var main := get_tree().current_scene
 	if main and main.has_signal("wave_started"):
 		main.wave_started.connect(_on_wave_started)
+	if main and main.has_signal("biome_changed"):
+		main.biome_changed.connect(_on_biome_changed)
 
 
 func _on_wave_started(wave: int) -> void:
 	if _wave_label:
-		_wave_label.text = "WAVE %d" % wave
+		var biome_name := ""
+		var main := get_tree().current_scene
+		if main and main.has_method("current_biome"):
+			var b = main.current_biome()
+			if b:
+				biome_name = " — " + b.display_name
+		_wave_label.text = "WAVE %d%s" % [wave, biome_name]
 		var tw := create_tween()
 		_wave_label.modulate = Color(1, 0.85, 0.2)
 		_wave_label.scale = Vector2(1.4, 1.4)
 		_wave_label.pivot_offset = _wave_label.size * 0.5
 		tw.parallel().tween_property(_wave_label, "scale", Vector2.ONE, 0.4)
 		tw.parallel().tween_property(_wave_label, "modulate", Color.WHITE, 0.4)
+
+
+func _on_biome_changed(_biome) -> void:
+	# Refresh wave label with new biome name
+	var main := get_tree().current_scene
+	if main and "current_wave" in main:
+		_on_wave_started(main.current_wave)
 
 
 func _build_panels() -> void:

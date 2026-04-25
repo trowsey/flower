@@ -51,7 +51,7 @@ static func roll_rarity(bonus_tier: int = 0) -> int:
 	return ItemResource.Rarity.COMMON
 
 
-static func make_random(item_type: int = -1, rarity: int = -1) -> ItemResource:
+static func make_random(item_type: int = -1, rarity: int = -1, item_level: int = 1) -> ItemResource:
 	if item_type < 0:
 		var types := [
 			ItemResource.ItemType.WEAPON,
@@ -67,27 +67,56 @@ static func make_random(item_type: int = -1, rarity: int = -1) -> ItemResource:
 	var item := ItemResource.new()
 	item.item_type = item_type
 	item.rarity = rarity
+	item.item_level = max(1, item_level)
 
 	var ranges: Dictionary = MODIFIER_RANGES[rarity]
 	var num_mods: int = randi_range(int(ranges.min_mods), int(ranges.max_mods))
 	var available_mods := PREFIXES.keys()
 	available_mods.shuffle()
 
+	var lvl_mult: float = 1.0 + 0.10 * float(item.item_level - 1)
 	var mods: Dictionary = {}
 	for i in num_mods:
 		if i >= available_mods.size():
 			break
 		var key: String = available_mods[i]
-		mods[key] = randf_range(float(ranges.value_min), float(ranges.value_max))
+		mods[key] = randf_range(float(ranges.value_min), float(ranges.value_max)) * lvl_mult
 	item.stat_modifiers = mods
 
 	var primary_key: String = mods.keys()[0] if mods.size() > 0 else "attack_damage_flat"
 	var prefix: String = (PREFIXES[primary_key] as Array).pick_random()
 	var base_name: String = BASE_NAMES[item_type]
 	var suffix: String = (SUFFIXES[rarity] as Array).pick_random()
-	item.item_name = (prefix + " " + base_name + " " + suffix).strip_edges()
+	var name_str: String = (prefix + " " + base_name + " " + suffix).strip_edges()
+	if item.item_level >= 2:
+		name_str += " (iLvl %d)" % item.item_level
+	item.item_name = name_str
 	item.description = ItemResource.rarity_name(rarity) + " " + base_name
 	return item
+
+
+const ItemSetScript = preload("res://scripts/items/item_set.gd")
+
+
+# Roll for a set-piece drop. Returns null most of the time.
+static func maybe_make_set_item(item_level: int = 1, drop_chance: float = 0.03) -> ItemResource:
+	if randf() > drop_chance:
+		return null
+	var sets: Array = ItemSetScript.ALL()
+	if sets.size() == 0:
+		return null
+	var set_def: Resource = sets.pick_random()
+	var piece_name: String = (set_def.pieces as Array).pick_random()
+	var slot_type: int = ItemSetScript.slot_for_piece(piece_name)
+	# Set pieces are at least RARE and use item-level scaling
+	var rarity: int = max(ItemResource.Rarity.RARE, roll_rarity(1))
+	var base_item: ItemResource = make_random(slot_type, rarity, item_level)
+	base_item.set_id = set_def.set_id
+	base_item.item_name = piece_name
+	if item_level >= 2:
+		base_item.item_name += " (iLvl %d)" % item_level
+	base_item.description = "Part of %s" % set_def.display_name
+	return base_item
 
 
 static func make_starter_weapon() -> ItemResource:
