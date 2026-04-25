@@ -2,9 +2,13 @@
 # Pauses the SceneTree; menu nodes use process_mode = ALWAYS to keep running.
 extends CanvasLayer
 
+const Settings = preload("res://scripts/settings.gd")
+
 @onready var _panel: Control = $Panel
 @onready var _resume_btn: Button = $Panel/VBox/Resume
 @onready var _quit_btn: Button = $Panel/VBox/QuitToMenu
+@onready var _volume: HSlider = get_node_or_null("Panel/VBox/VolumeRow/Volume")
+@onready var _fullscreen: CheckBox = get_node_or_null("Panel/VBox/Fullscreen")
 
 
 func _ready() -> void:
@@ -14,6 +18,12 @@ func _ready() -> void:
 		_resume_btn.pressed.connect(_resume)
 	if _quit_btn:
 		_quit_btn.pressed.connect(_quit_to_menu)
+	if _volume:
+		_volume.value = Settings.get_master_volume()
+		_volume.value_changed.connect(func(v): Settings.set_master_volume(v))
+	if _fullscreen:
+		_fullscreen.button_pressed = Settings.get_fullscreen()
+		_fullscreen.toggled.connect(func(on): Settings.set_fullscreen(on))
 
 
 func _unhandled_input(event: InputEvent) -> void:

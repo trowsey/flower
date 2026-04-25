@@ -16,7 +16,20 @@ const COMBO_DAMAGE_MULT := [1.0, 1.25, 1.75]
 const ATTACK_BASE_WINDOW_DELAY := 0.1
 const ATTACK_BASE_ACTIVE := 0.3
 
-enum PlayerState { NORMAL, BEING_DRAINED, SOUL_DEAD, HEALTH_DEAD }
+# Dash configuration
+const DASH_DISTANCE := 5.0
+const DASH_DURATION := 0.18
+const DASH_COOLDOWN := 1.2
+
+# Revive: another player must be within REVIVE_RADIUS for REVIVE_TIME seconds
+const REVIVE_RADIUS := 2.5
+const REVIVE_TIME := 2.0
+
+# Loot magnet: gold/items within MAGNET_RADIUS get pulled toward player
+const MAGNET_RADIUS := 3.0
+const MAGNET_SPEED := 6.0
+
+enum PlayerState { NORMAL, BEING_DRAINED, SOUL_DEAD, HEALTH_DEAD, DOWNED, DASHING }
 
 signal soul_changed(new_value: float)
 signal health_changed(new_value: float)
@@ -32,6 +45,9 @@ signal stats_recalculated
 signal combo_advanced(stage: int)
 signal item_picked_up(item: ItemResource)
 signal player_died(reason: String)
+signal player_downed
+signal player_revived
+signal dashed
 
 # Multiplayer config — set before _ready (or via setup()).
 # player_index: 0 for P1 (mouse + first controller), 1 for P2 (controller only), etc.
@@ -68,6 +84,14 @@ var _soul_at_latch_start := 100.0
 var _combo_stage: int = 0
 var _combo_window_remaining: float = 0.0
 var _combo_window_open: bool = false
+
+# Dash state
+var _dash_cooldown: float = 0.0
+var _dash_remaining: float = 0.0
+var _dash_dir: Vector3 = Vector3.ZERO
+
+# Revive state — when DOWNED, accumulates while a teammate is in range
+var _revive_progress: float = 0.0
 
 
 func _ready() -> void:
@@ -139,7 +163,13 @@ func _is_primary_player() -> bool:
 # --- State helpers ---
 
 func is_alive() -> bool:
+	# DOWNED is "incapacitated but revivable" — not dead, not playable
 	return state != PlayerState.SOUL_DEAD and state != PlayerState.HEALTH_DEAD
+
+
+func is_active() -> bool:
+	# Can the player accept input / move on their own?
+	return is_alive() and state != PlayerState.DOWNED and state != PlayerState.BEING_DRAINED
 
 
 func _set_state(new_state: int) -> void:
@@ -173,6 +203,10 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if event.is_action_pressed("attack"):
 		_handle_controller_attack()
+
+	# Dash: Shift on keyboard, RB / R1 on controller
+	if _is_dash_event(event):
+		_try_dash()
 
 	# Skill hotbar 1-4
 	for i in range(4):
@@ -357,6 +391,12 @@ func recover_to_pre_latch() -> void:
 func take_damage(amount: float) -> void:
 	if not is_alive():
 		return
+	# Dashing = invuln frames
+	if state == PlayerState.DASHING:
+		return
+	# Downed players can't take more damage
+	if state == PlayerState.DOWNED:
+		return
 	var actual: float = max(amount - stats.defense(), 1.0)
 	health -= actual
 	health_changed.emit(health)
@@ -367,7 +407,11 @@ func take_damage(amount: float) -> void:
 	_combo_window_open = false
 	if health <= 0.0:
 		health = 0.0
-		_die_health()
+		# In 2P, go to DOWNED if a teammate is still up
+		if _has_living_teammate():
+			down_player("health")
+		else:
+			_die_health()
 
 
 func _die_health() -> void:
@@ -506,6 +550,26 @@ func _physics_process(delta: float) -> void:
 		if skill_cooldowns[i] > 0.0:
 			skill_cooldowns[i] = max(0.0, skill_cooldowns[i] - delta)
 
+	# Dash cooldown ticks regardless of state
+	if _dash_cooldown > 0.0:
+		_dash_cooldown = max(0.0, _dash_cooldown - delta)
+
+	# Revive progress ticks while DOWNED
+	_process_revive(delta)
+
+	# Loot magnet — only active players magnetize pickups
+	if is_active():
+		_process_magnet(delta)
+
+	# Active dash overrides movement
+	if state == PlayerState.DASHING:
+		_dash_remaining -= delta
+		velocity = _dash_dir * (DASH_DISTANCE / DASH_DURATION)
+		move_and_slide()
+		if _dash_remaining <= 0.0:
+			_set_state(PlayerState.NORMAL)
+		return
+
 	# Combo window decay
 	if _combo_window_open:
 		_combo_window_remaining -= delta
@@ -604,6 +668,101 @@ func _on_pickup_area_entered(area: Area3D) -> void:
 	elif area.is_in_group("item_pickup") and area.has_method("collect"):
 		area.collect(self)
 
+
+# --- Dash / dodge ---
+
+func _is_dash_event(event: InputEvent) -> bool:
+	if event is InputEventKey and event.pressed and not event.echo:
+		return event.keycode == KEY_SHIFT
+	if event is InputEventJoypadButton and event.pressed:
+		return event.button_index == JOY_BUTTON_RIGHT_SHOULDER
+	return false
+
+
+func _try_dash() -> bool:
+	if not is_active():
+		return false
+	if _dash_cooldown > 0.0:
+		return false
+	var dir: Vector3 = _get_stick_input()
+	if dir.length() < 0.1:
+		dir = _facing_dir
+	if dir.length() < 0.1:
+		return false
+	_dash_dir = dir.normalized()
+	_dash_remaining = DASH_DURATION
+	_dash_cooldown = DASH_COOLDOWN
+	_set_state(PlayerState.DASHING)
+	dashed.emit()
+	return true
+
+
+# --- Revive ---
+
+func down_player(_reason: String = "health") -> void:
+	# Convert what would be a death into the DOWNED state when there's a
+	# living teammate who can revive. Returns true if the player was downed
+	# (deferring death). Solo players or last-survivor get full death.
+	if _has_living_teammate():
+		health = 1.0
+		health_changed.emit(health)
+		velocity = Vector3.ZERO
+		_revive_progress = 0.0
+		_set_state(PlayerState.DOWNED)
+		player_downed.emit()
+
+
+func revive() -> void:
+	if state != PlayerState.DOWNED:
+		return
+	health = max(stats.max_health() * 0.5, 1.0)
+	soul = max(stats.max_soul() * 0.5, soul)
+	health_changed.emit(health)
+	soul_changed.emit(soul)
+	_revive_progress = 0.0
+	_set_state(PlayerState.NORMAL)
+	player_revived.emit()
+
+
+func _has_living_teammate() -> bool:
+	for p in get_tree().get_nodes_in_group("player"):
+		if p == self:
+			continue
+		if p.has_method("is_active") and p.is_active():
+			return true
+	return false
+
+
+func _process_revive(delta: float) -> void:
+	if state != PlayerState.DOWNED:
+		return
+	var reviver_in_range := false
+	for p in get_tree().get_nodes_in_group("player"):
+		if p == self:
+			continue
+		if not (p.has_method("is_active") and p.is_active()):
+			continue
+		if p.global_position.distance_to(global_position) <= REVIVE_RADIUS:
+			reviver_in_range = true
+			break
+	if reviver_in_range:
+		_revive_progress += delta
+		if _revive_progress >= REVIVE_TIME:
+			revive()
+	else:
+		_revive_progress = max(0.0, _revive_progress - delta * 0.5)
+
+
+# --- Loot magnet ---
+
+func _process_magnet(_delta: float) -> void:
+	for pickup in get_tree().get_nodes_in_group("pickups"):
+		if not is_instance_valid(pickup):
+			continue
+		var dist: float = pickup.global_position.distance_to(global_position)
+		if dist <= MAGNET_RADIUS and dist > 0.4:
+			var dir: Vector3 = (global_position - pickup.global_position).normalized()
+			pickup.global_position += dir * MAGNET_SPEED * _delta
 
 # --- Signature skill implementations ---
 
