@@ -1,0 +1,121 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_menu.gd" id="1"]
+
+[node name="SettingsMenu" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.04, 0.08, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Scroll" type="ScrollContainer" parent="Center"]
+custom_minimum_size = Vector2(560, 540)
+
+[node name="VBox" type="VBoxContainer" parent="Center/Scroll"]
+custom_minimum_size = Vector2(540, 0)
+
+[node name="Title" type="Label" parent="Center/Scroll/VBox"]
+text = "SETTINGS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 32
+
+[node name="Audio" type="VBoxContainer" parent="Center/Scroll/VBox"]
+
+[node name="AudioHeader" type="Label" parent="Center/Scroll/VBox/Audio"]
+text = "AUDIO"
+
+[node name="MasterRow" type="HBoxContainer" parent="Center/Scroll/VBox/Audio"]
+
+[node name="L" type="Label" parent="Center/Scroll/VBox/Audio/MasterRow"]
+text = "Master"
+custom_minimum_size = Vector2(120, 0)
+
+[node name="Master" type="HSlider" parent="Center/Scroll/VBox/Audio/MasterRow"]
+custom_minimum_size = Vector2(360, 0)
+min_value = -40.0
+max_value = 6.0
+step = 1.0
+
+[node name="MusicRow" type="HBoxContainer" parent="Center/Scroll/VBox/Audio"]
+
+[node name="L" type="Label" parent="Center/Scroll/VBox/Audio/MusicRow"]
+text = "Music"
+custom_minimum_size = Vector2(120, 0)
+
+[node name="Music" type="HSlider" parent="Center/Scroll/VBox/Audio/MusicRow"]
+custom_minimum_size = Vector2(360, 0)
+min_value = -40.0
+max_value = 6.0
+step = 1.0
+
+[node name="SfxRow" type="HBoxContainer" parent="Center/Scroll/VBox/Audio"]
+
+[node name="L" type="Label" parent="Center/Scroll/VBox/Audio/SfxRow"]
+text = "SFX"
+custom_minimum_size = Vector2(120, 0)
+
+[node name="Sfx" type="HSlider" parent="Center/Scroll/VBox/Audio/SfxRow"]
+custom_minimum_size = Vector2(360, 0)
+min_value = -40.0
+max_value = 6.0
+step = 1.0
+
+[node name="Display" type="VBoxContainer" parent="Center/Scroll/VBox"]
+
+[node name="DisplayHeader" type="Label" parent="Center/Scroll/VBox/Display"]
+text = "DISPLAY"
+
+[node name="Fullscreen" type="CheckBox" parent="Center/Scroll/VBox/Display"]
+text = "Fullscreen"
+
+[node name="Vsync" type="CheckBox" parent="Center/Scroll/VBox/Display"]
+text = "VSync"
+
+[node name="ShakeRow" type="HBoxContainer" parent="Center/Scroll/VBox/Display"]
+
+[node name="L" type="Label" parent="Center/Scroll/VBox/Display/ShakeRow"]
+text = "Camera Shake"
+custom_minimum_size = Vector2(120, 0)
+
+[node name="Shake" type="HSlider" parent="Center/Scroll/VBox/Display/ShakeRow"]
+custom_minimum_size = Vector2(360, 0)
+min_value = 0.0
+max_value = 2.0
+step = 0.1
+
+[node name="Gameplay" type="VBoxContainer" parent="Center/Scroll/VBox"]
+
+[node name="GameplayHeader" type="Label" parent="Center/Scroll/VBox/Gameplay"]
+text = "GAMEPLAY"
+
+[node name="DamageNumbers" type="CheckBox" parent="Center/Scroll/VBox/Gameplay"]
+text = "Damage Numbers"
+
+[node name="MagnetRow" type="HBoxContainer" parent="Center/Scroll/VBox/Gameplay"]
+
+[node name="L" type="Label" parent="Center/Scroll/VBox/Gameplay/MagnetRow"]
+text = "Loot Magnet"
+custom_minimum_size = Vector2(120, 0)
+
+[node name="Magnet" type="HSlider" parent="Center/Scroll/VBox/Gameplay/MagnetRow"]
+custom_minimum_size = Vector2(360, 0)
+min_value = 1.0
+max_value = 6.0
+step = 0.5
+
+[node name="Buttons" type="HBoxContainer" parent="Center/Scroll/VBox"]
+alignment = 1
+
+[node name="Reset" type="Button" parent="Center/Scroll/VBox/Buttons"]
+text = "Reset to Defaults"
+
+[node name="Back" type="Button" parent="Center/Scroll/VBox/Buttons"]
+text = "Back"

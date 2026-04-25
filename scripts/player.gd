@@ -8,6 +8,8 @@
 # - Multi-player: device_id selects controller; player_index 0 owns mouse/keyboard
 extends CharacterBody3D
 
+const SettingsScript = preload("res://scripts/settings.gd")
+
 const STICK_DEADZONE := 0.2
 const SOUL_DRAIN_DURATION := 15.0
 const COMBO_WINDOW := 0.5
@@ -756,11 +758,12 @@ func _process_revive(delta: float) -> void:
 # --- Loot magnet ---
 
 func _process_magnet(_delta: float) -> void:
+	var radius: float = SettingsScript.get_loot_magnet_radius() if SettingsScript else MAGNET_RADIUS
 	for pickup in get_tree().get_nodes_in_group("pickups"):
 		if not is_instance_valid(pickup):
 			continue
 		var dist: float = pickup.global_position.distance_to(global_position)
-		if dist <= MAGNET_RADIUS and dist > 0.4:
+		if dist <= radius and dist > 0.4:
 			var dir: Vector3 = (global_position - pickup.global_position).normalized()
 			pickup.global_position += dir * MAGNET_SPEED * _delta
 

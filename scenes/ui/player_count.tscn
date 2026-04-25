@@ -1,0 +1,55 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/player_count.gd" id="1"]
+
+[node name="PlayerCount" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.04, 0.08, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(640, 0)
+alignment = 1
+
+[node name="Title" type="Label" parent="Center/VBox"]
+text = "How many players?"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="Spacer" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 24)
+
+[node name="Cards" type="HBoxContainer" parent="Center/VBox"]
+alignment = 1
+custom_minimum_size = Vector2(0, 200)
+
+[node name="OnePlayer" type="Button" parent="Center/VBox/Cards"]
+text = "1 PLAYER"
+custom_minimum_size = Vector2(260, 180)
+
+[node name="Spacer2" type="Control" parent="Center/VBox/Cards"]
+custom_minimum_size = Vector2(40, 0)
+
+[node name="TwoPlayer" type="Button" parent="Center/VBox/Cards"]
+text = "2 PLAYERS"
+custom_minimum_size = Vector2(260, 180)
+
+[node name="Hint" type="Label" parent="Center/VBox"]
+text = "Plug in a 2nd controller for couch co-op"
+horizontal_alignment = 1
+
+[node name="Spacer3" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 24)
+
+[node name="Back" type="Button" parent="Center/VBox"]
+text = "Back"
+custom_minimum_size = Vector2(0, 36)

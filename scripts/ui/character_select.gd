@@ -21,18 +21,21 @@ var _classes: Array = []
 
 func _ready() -> void:
 	_classes = CharacterClassScript.all()
+	# Honor requested_player_count from the upstream player_count screen
+	if PartyConfig.has_meta("requested_player_count"):
+		_two_player = int(PartyConfig.get_meta("requested_player_count")) >= 2
 	_refresh()
 
 
 func _refresh() -> void:
 	if _title:
-		_title.text = "FLOWER"
+		_title.text = "CHOOSE YOUR HERO"
 	if _mode_label:
-		_mode_label.text = "Press TAB or START to toggle 1P / 2P  |  Mode: %s" % ("2 PLAYERS" if _two_player else "1 PLAYER")
+		_mode_label.text = "%s" % ("2 PLAYERS" if _two_player else "1 PLAYER")
 	if _hint_label:
 		_hint_label.text = "P1: A/D or LStick to change class, ENTER/X to ready up\n" + \
-			"P2: ←/→ on second controller, X to ready up\n" + \
-			"All players ready → game starts"
+			("P2: ←/→ on 2nd controller, X to ready up\n" if _two_player else "") + \
+			"All players ready → game starts  |  ESC: back"
 	_redraw_slots()
 
 
@@ -97,19 +100,12 @@ func _build_slot(slot_index: int) -> Control:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# Toggle mode (TAB or START button on any controller)
-	if event.is_action_pressed("ui_focus_next") or _is_start_pressed(event):
-		_two_player = not _two_player
-		_ready_state[1] = false
-		_refresh()
-		return
-
-	# Cancel back to menu (ESC)
+	# Cancel back to player count screen (ESC or B)
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
-		_two_player = false
-		for i in _ready_state.size():
-			_ready_state[i] = false
-		_refresh()
+		get_tree().change_scene_to_file("res://scenes/ui/player_count.tscn")
+		return
+	if event is InputEventJoypadButton and event.pressed and event.button_index == JOY_BUTTON_B:
+		get_tree().change_scene_to_file("res://scenes/ui/player_count.tscn")
 		return
 
 	# Map device → slot
