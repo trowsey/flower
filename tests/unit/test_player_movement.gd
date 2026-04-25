@@ -13,7 +13,7 @@ func before_each() -> void:
 
 
 func test_req1_player_speed_constant() -> void:
-	assert_eq(_player.SPEED, 7.0, "Player SPEED should be 7.0")
+	assert_almost_eq(_player.stats.move_speed(), 7.0, 0.01, "Player base move_speed should be 7.0")
 
 
 func test_req1_initial_state_idle() -> void:
@@ -28,7 +28,7 @@ func test_req1_initial_animation_idle() -> void:
 
 func test_req4_get_stick_input_returns_zero_below_deadzone() -> void:
 	# With no input, stick input should return zero vector
-	var result := _player._get_stick_input()
+	var result: Vector3 = _player._get_stick_input()
 	assert_eq(result, Vector3.ZERO, "Stick input below deadzone should return Vector3.ZERO")
 
 

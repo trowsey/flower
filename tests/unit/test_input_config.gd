@@ -31,37 +31,37 @@ func test_req8_dodge_action_exists() -> void:
 
 func test_req4_move_up_deadzone() -> void:
 	var deadzone := InputMap.action_get_deadzone("move_up")
-	assert_eq(deadzone, 0.2, "move_up deadzone should be 0.2")
+	assert_almost_eq(deadzone, 0.2, 0.001, "move_up deadzone should be 0.2")
 
 
 func test_req4_move_down_deadzone() -> void:
 	var deadzone := InputMap.action_get_deadzone("move_down")
-	assert_eq(deadzone, 0.2, "move_down deadzone should be 0.2")
+	assert_almost_eq(deadzone, 0.2, 0.001, "move_down deadzone should be 0.2")
 
 
 func test_req4_move_left_deadzone() -> void:
 	var deadzone := InputMap.action_get_deadzone("move_left")
-	assert_eq(deadzone, 0.2, "move_left deadzone should be 0.2")
+	assert_almost_eq(deadzone, 0.2, 0.001, "move_left deadzone should be 0.2")
 
 
 func test_req4_move_right_deadzone() -> void:
 	var deadzone := InputMap.action_get_deadzone("move_right")
-	assert_eq(deadzone, 0.2, "move_right deadzone should be 0.2")
+	assert_almost_eq(deadzone, 0.2, 0.001, "move_right deadzone should be 0.2")
 
 
 func test_req5_attack_deadzone() -> void:
 	var deadzone := InputMap.action_get_deadzone("attack")
-	assert_eq(deadzone, 0.5, "attack deadzone should be 0.5")
+	assert_almost_eq(deadzone, 0.5, 0.001, "attack deadzone should be 0.5")
 
 
 func test_req7_interact_deadzone() -> void:
 	var deadzone := InputMap.action_get_deadzone("interact")
-	assert_eq(deadzone, 0.5, "interact deadzone should be 0.5")
+	assert_almost_eq(deadzone, 0.5, 0.001, "interact deadzone should be 0.5")
 
 
 func test_req8_dodge_deadzone() -> void:
 	var deadzone := InputMap.action_get_deadzone("dodge")
-	assert_eq(deadzone, 0.5, "dodge deadzone should be 0.5")
+	assert_almost_eq(deadzone, 0.5, 0.001, "dodge deadzone should be 0.5")
 
 
 func test_req2_move_up_has_keyboard_event() -> void:

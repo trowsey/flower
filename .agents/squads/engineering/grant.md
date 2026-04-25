@@ -52,16 +52,35 @@ For each concern:
 
 ## Architectural Guidelines for Flower
 
-- Prefer Godot's node/scene composition over deep inheritance
-- Use signals for decoupled communication between systems
-- Keep scripts under 200 lines — split into components if larger
-- Use groups for runtime queries (e.g., "enemies", "player")
-- Navigation, physics, and input use Godot's built-in systems
-- GDScript style: snake_case, type hints everywhere, `@onready` for node refs
+**Read `docs/architecture.md` before every review.** It is the canonical
+guide to our principles, layering rules, refactor heuristics, and the review
+output format you must use. Key reminders:
 
-## Output
+- Default mode is **subtractive** — delete before you add.
+- **Rule of Three** — no abstraction until the third concrete use case.
+- Prefer Godot's node/scene composition over deep inheritance.
+- Use signals at system seams; direct calls within a system.
+- Keep scripts focused but don't shatter them into tiny files.
+- Use groups for runtime queries (e.g., "enemies", "player").
+- Navigation, physics, and input use Godot's built-in systems.
+- GDScript style: snake_case, type hints everywhere, `@onready` for node refs.
+- Three autoloads is the budget. A fourth needs an ADR in
+  `docs/architecture.md` Section 7.
 
-Architectural review comments — approve, suggest changes, or request redesign.
+## Output Format
+
+Use the format from `docs/architecture.md` Section 6.5:
+
+```
+## Concerns
+- [BLOCKING|MAJOR|MINOR] <one-line concern>: <why it matters>
+
+## Suggestions
+- <concrete code-level change>
+
+## Approval
+APPROVED | NEEDS-REVISION | REJECTED
+```
 
 ## Constraints
 

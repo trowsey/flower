@@ -13,7 +13,7 @@ func before_each() -> void:
 
 
 func test_req10_attack_damage_constant() -> void:
-	assert_eq(_player.ATTACK_DAMAGE, 25.0, "ATTACK_DAMAGE should be 25.0")
+	assert_almost_eq(_player.stats.attack_damage(), 25.0, 0.01, "Base attack_damage should be 25.0")
 
 
 func test_req4_start_attack_sets_state() -> void:
@@ -38,7 +38,7 @@ func test_req8_attack_blocks_new_attacks_mouse() -> void:
 	_player._attacking = true
 	# _handle_mouse_attack returns early if _attacking
 	# We verify by checking state doesn't change
-	var old_facing := _player._facing_dir
+	var old_facing: Vector3 = _player._facing_dir
 	_player._handle_mouse_attack(Vector2(100, 100))
 	# Since _attacking is true, _handle_mouse_attack should early return
 	assert_true(_player._attacking, "Attack state should remain")

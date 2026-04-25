@@ -36,7 +36,7 @@ func test_req1_target_acquisition() -> void:
 
 
 func test_req3_initial_position_snap() -> void:
-	var expected := _player.global_position + _camera.offset
+	var expected: Vector3 = _player.global_position + _camera.offset
 	assert_eq(_camera.global_position, expected, "Camera should snap to target + offset on ready")
 
 
@@ -45,7 +45,7 @@ func test_req4_smooth_follow_moves_toward_target() -> void:
 	var pos_before := _camera.global_position
 	_camera._physics_process(0.016)
 	var pos_after := _camera.global_position
-	var desired := _player.global_position + _camera.offset
+	var desired: Vector3 = _player.global_position + _camera.offset
 	# Camera should have moved toward the desired position
 	var dist_before := pos_before.distance_to(desired)
 	var dist_after := pos_after.distance_to(desired)
@@ -66,7 +66,7 @@ func test_req4_lerp_weight_uses_delta() -> void:
 	_camera._physics_process(0.1)
 	var large_delta_pos := _camera.global_position
 
-	var desired := _player.global_position + _camera.offset
+	var desired: Vector3 = _player.global_position + _camera.offset
 	var small_dist := small_delta_pos.distance_to(desired)
 	var large_dist := large_delta_pos.distance_to(desired)
 	assert_lt(large_dist, small_dist, "Larger delta should move camera further toward target")
@@ -74,6 +74,7 @@ func test_req4_lerp_weight_uses_delta() -> void:
 
 func test_req8_no_crash_without_target() -> void:
 	# Create camera without any player in scene
+	_player.remove_from_group("player")
 	var solo_camera := Camera3D.new()
 	solo_camera.set_script(_camera_script)
 	add_child_autofree(solo_camera)
@@ -121,7 +122,7 @@ func test_req4_camera_follows_moving_player() -> void:
 	for i in 10:
 		_camera._physics_process(0.016)
 	var final_cam_pos := _camera.global_position
-	var desired := _player.global_position + _camera.offset
+	var desired: Vector3 = _player.global_position + _camera.offset
 	assert_lt(
 		final_cam_pos.distance_to(desired),
 		initial_cam_pos.distance_to(desired),
