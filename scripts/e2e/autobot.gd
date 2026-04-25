@@ -73,9 +73,6 @@ func _run() -> void:
 		_screenshot(name)
 	_emit_report()
 	autobot_finished.emit(not _failed, results)
-	if not Engine.is_editor_hint() and DisplayServer.get_name() != "headless":
-		pass
-	# Exit with code
 	get_tree().quit(0 if not _failed else 1)
 
 

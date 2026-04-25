@@ -399,13 +399,13 @@ func _on_stats_changed() -> void:
 	stats_recalculated.emit()
 
 
-func _on_level_changed(new_level: int) -> void:
-	# On level-up restore some health/soul
+func _on_level_changed(_new_level: int) -> void:
+	# On level-up restore some health/soul. The level_up signal itself is
+	# emitted from add_xp() so listeners aren't notified twice per level.
 	health = min(health + 30.0, stats.max_health())
 	soul = min(soul + 30.0, stats.max_soul())
 	health_changed.emit(health)
 	soul_changed.emit(soul)
-	level_up.emit(new_level)
 
 
 # --- Skills ---
