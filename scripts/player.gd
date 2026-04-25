@@ -66,7 +66,7 @@ func _handle_attack(screen_pos: Vector2) -> void:
 			sprite.flip_h = dir.x < 0
 
 	# Stop movement and play attack
-	_moving = false
+	_moving = false;
 	_attacking = true
 	velocity = Vector3.ZERO
 	sprite.play("attack")

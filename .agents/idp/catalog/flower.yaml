@@ -1,0 +1,25 @@
+apiVersion: squads/v1
+kind: Service
+metadata:
+  name: "flower"
+  description: "a dungeon crawler about killing demons made in godot"
+  owner: "engineering"
+  repo: "flower"
+  tags: []
+spec:
+  type: "domain"
+  stack: "unknown"
+  branches:
+    default: main
+    development: 
+    workflow: "direct-to-main"
+  ci:
+    template: null
+    required_checks: []
+    build_command: null
+    test_command: null
+  deploy: null
+  health: []
+  dependencies:
+    runtime: []
+  scorecard: "domain"
