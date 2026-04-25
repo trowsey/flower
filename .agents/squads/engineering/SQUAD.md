@@ -1,6 +1,6 @@
 ---
 name: Engineering
-lead: issue-solver
+lead: alucard
 channel: "#engineering"
 model: sonnet
 effort: high
@@ -25,25 +25,47 @@ approvals:
     files_changed: 20
 ---
 
-# Engineering
+# Engineering — The Castlevania Squad
 
-Ships code. Solves issues, reviews PRs, and maintains code quality.
+Ships code through test-driven development. Every feature follows the full TDD pipeline: spec → architecture → failing tests → implementation → review → validation → PR.
 
 ## Goals
 
-- [ ] **First run — Squad evaluation**: audit repo state (open issues, test coverage, CI health, tech debt, security surface) against `BUSINESS_BRIEF.md` and produce a baseline engineering report with top 3 priorities
-- [ ] Solve open GitHub issues with PRs
-- [ ] Maintain code quality through adversarial review
-- [ ] Keep test coverage high
+- [ ] Maintain 100% spec coverage — every feature has a testable spec
+- [ ] Maintain full test coverage via TDD — tests written before code
+- [ ] Keep architecture simple, readable, and Godot-idiomatic
+- [ ] Ship quality code through adversarial review
 
 ## Agents
 
 | Agent | Role | Purpose |
 |-------|------|---------|
-| issue-solver | lead | Reads open issues, creates PRs with fixes |
-| code-reviewer | evaluator | Reviews PRs for quality, security, and correctness |
-| test-writer | doer | Writes tests for untested code paths |
+| alucard | lead | Orchestrates the TDD pipeline, gathers requirements, coordinates all agents |
+| sypha | worker | Writes testable specifications from requirements |
+| grant | worker | Reviews architectural decisions for simplicity and correctness |
+| trevor | worker | Writes failing tests from specs (TDD red phase) |
+| richter | evaluator | Reviews tests for completeness against the spec |
+| shanoa | worker | Implements code to make tests pass (TDD green phase) |
+| julius | evaluator | Adversarial code review of implementations |
+| maria | worker | Runs all tests, validates everything passes (read-only) |
 
-## Pipeline
+## TDD Pipeline
 
-`issue-solver` fixes → `code-reviewer` reviews → `test-writer` covers
+```
+Request → alucard (gather requirements)
+       → sypha (write spec) ↔ alucard (clarification loop)
+       → grant (architecture review) ↔ alucard (design loop)
+       → trevor (write failing tests from spec)
+       → richter (review tests against spec)
+       → shanoa (implement code to pass tests)
+       → julius (code review) ↔ shanoa (review loop)
+       → maria (run all tests — no modifications allowed)
+       → PR on GitHub
+```
+
+## Testing
+
+- Framework: GUT (Godot Unit Testing)
+- Tests: `tests/unit/` and `tests/integration/`
+- Naming: `test_{feature}.gd` with `test_{requirement}_{scenario}()` functions
+- Run: `godot --headless --script addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`
