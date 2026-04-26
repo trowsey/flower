@@ -23,8 +23,8 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if not alive:
 		return
-	if _hit_flash_remaining > 0.0:
-		_hit_flash_remaining -= delta
+	# NOTE: Do NOT decrement _hit_flash_remaining here — EnemyBase._process
+	# already ticks it. Doing both made the flash decay at 2x speed.
 	if not player:
 		return
 
@@ -92,8 +92,12 @@ func _release_latch() -> void:
 
 
 func take_damage(amount: float) -> void:
+	# Capture latched-state BEFORE delegating: super.take_damage may call die()
+	# which sets alive=false, and we'd otherwise leave the DemonManager lock
+	# held forever after a latched demon was killed.
+	var was_latched: bool = demon_state == DemonState.LATCHED
 	super.take_damage(amount)
-	if demon_state == DemonState.LATCHED and alive:
+	if was_latched:
 		_release_latch()
 
 

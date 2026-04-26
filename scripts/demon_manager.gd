@@ -10,6 +10,12 @@ var _latched_target: Node = null
 
 
 func request_latch(demon: Node3D, target: Node = null) -> bool:
+	# Defensive: if the previous latched demon was freed without releasing
+	# (shouldn't happen, but a wave wipe / queue_free chain could do it),
+	# clear the stale reference so a fresh demon can latch.
+	if _latched_demon != null and not is_instance_valid(_latched_demon):
+		_latched_demon = null
+		_latched_target = null
 	if _latched_demon != null:
 		return false
 	_latched_demon = demon

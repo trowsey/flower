@@ -37,11 +37,15 @@ func _process(delta: float) -> void:
 
 
 func _apply_hit_flash_modulate(active: bool) -> void:
+	# Use a sentinel meta key to detect "we have stashed a value" — including
+	# when that value is null. A plain get_meta(..., null) check can't tell
+	# "absent" from "present-but-null", which previously left material_override
+	# stuck on the duplicated red material after a flash ended.
 	for child in get_children():
 		if child is MeshInstance3D:
 			var mesh: MeshInstance3D = child
 			if active:
-				if mesh.get_meta("_orig_mod", null) == null:
+				if not mesh.has_meta("_orig_mod"):
 					mesh.set_meta("_orig_mod", mesh.material_override)
 				if mesh.material_override == null and mesh.mesh and mesh.mesh.surface_get_material(0):
 					var dup: StandardMaterial3D = mesh.mesh.surface_get_material(0).duplicate()
@@ -49,10 +53,9 @@ func _apply_hit_flash_modulate(active: bool) -> void:
 				if mesh.material_override is StandardMaterial3D:
 					(mesh.material_override as StandardMaterial3D).albedo_color = Color(2.0, 0.6, 0.6)
 			else:
-				var orig = mesh.get_meta("_orig_mod", null)
-				if orig != null:
-					mesh.material_override = orig
-				mesh.set_meta("_orig_mod", null)
+				if mesh.has_meta("_orig_mod"):
+					mesh.material_override = mesh.get_meta("_orig_mod")
+					mesh.remove_meta("_orig_mod")
 
 
 func _ready() -> void:
