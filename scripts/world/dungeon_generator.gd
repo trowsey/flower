@@ -1,5 +1,8 @@
 # Procedural room generator: places a grid of room templates connected by doors.
 # Minimal implementation: 4 room "layouts" stored as int arrays. Generates a 3x3 floor.
+#
+# STATUS: Phase 2 stub per docs/specs/world-generation-v2.md. Not yet wired
+# into main.gd. Do not extend without referring to that spec.
 extends Node
 class_name DungeonGenerator
 

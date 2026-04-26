@@ -1,4 +1,7 @@
 # Fog of war: tracks explored tiles around player on a grid
+#
+# STATUS: Phase 4 stub per docs/specs/world-generation-v2.md. Not yet wired
+# into the running scene.
 extends Node
 class_name FogOfWar
 

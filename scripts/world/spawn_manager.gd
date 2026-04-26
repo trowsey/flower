@@ -1,4 +1,7 @@
 # Spawn manager: spawns enemies at room start with elite chance
+#
+# STATUS: Phase 1 stub per docs/specs/world-generation-v2.md. Not yet wired
+# into main.gd (which inlines equivalent logic in _spawn_wave).
 extends Node
 class_name SpawnManager
 

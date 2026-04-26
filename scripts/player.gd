@@ -8,6 +8,7 @@
 # - Multi-player: device_id selects controller; player_index 0 owns mouse/keyboard
 extends CharacterBody3D
 
+const CharacterClassScript := preload("res://scripts/items/character_class.gd")
 const SettingsScript = preload("res://scripts/settings.gd")
 
 const STICK_DEADZONE := 0.2
@@ -54,6 +55,8 @@ signal player_died(reason: String)
 signal player_downed
 signal player_revived
 signal dashed
+signal damage_dealt(amount: float, crit: bool)
+signal damage_taken(amount: float)
 
 # Multiplayer config — set before _ready (or via setup()).
 # player_index: 0 for P1 (mouse + first controller), 1 for P2 (controller only), etc.
@@ -121,25 +124,38 @@ func _ready() -> void:
 	stats.stats_changed.connect(_on_stats_changed)
 	stats.level_changed.connect(_on_level_changed)
 
-	# Apply chosen character class (if any)
-	if character_class_id >= 0:
-		var cls = load("res://scripts/items/character_class.gd").by_id(character_class_id)
-		cls.apply_to_stats(stats)
-		# Equip signature skill in slot 0
-		skills[0] = cls.make_signature_skill()
-		# Tint placeholder sprite
-		if sprite:
-			sprite.modulate = cls.primary_color
-
-	var starter := ItemFactory.make_starter_weapon()
-	equipment.set_equipped(ItemResource.ItemType.WEAPON, starter)
-
-	health = stats.max_health()
-	soul = stats.max_soul()
+	# Equip starter weapon
+	equipment.set_equipped(ItemResource.ItemType.WEAPON, ItemFactory.make_starter_weapon())
 
 	if pickup_area:
 		pickup_area.area_entered.connect(_on_pickup_area_entered)
 
+	# Apply class if one was chosen before _ready ran. main.gd may also call
+	# apply_character_class() after spawning to (re)apply.
+	if character_class_id >= 0:
+		apply_character_class(character_class_id)
+	else:
+		# No class yet — fill defaults from base PlayerStats.
+		health = stats.max_health()
+		soul = stats.max_soul()
+		max_health_changed.emit(stats.max_health())
+		max_soul_changed.emit(stats.max_soul())
+		health_changed.emit(health)
+		soul_changed.emit(soul)
+
+
+# Apply (or re-apply) a character class. Safe to call after _ready.
+func apply_character_class(class_id: int) -> void:
+	character_class_id = class_id
+	var cls = CharacterClassScript.by_id(class_id)
+	if cls == null:
+		return
+	cls.apply_to_stats(stats)
+	skills[0] = cls.make_signature_skill()
+	if sprite:
+		sprite.modulate = cls.primary_color
+	health = stats.max_health()
+	soul = stats.max_soul()
 	max_health_changed.emit(stats.max_health())
 	max_soul_changed.emit(stats.max_soul())
 	health_changed.emit(health)
@@ -351,16 +367,11 @@ func _deal_damage() -> void:
 				var crit_mult: float = CRIT_MULTIPLIER + stats.crit_damage_bonus()
 				var final_dmg: float = dmg * (crit_mult if crit else 1.0)
 				target.take_damage(final_dmg)
-				if has_node("/root/HitFeedback"):
-					var hf := get_node("/root/HitFeedback")
-					if is_finisher:
-						hf.finisher_hit(target.global_position, final_dmg, target)
-					else:
-						hf.enemy_hit(target.global_position, final_dmg, target, crit)
-				# Stats tracking
-				var main := get_tree().current_scene
-				if main and "run_stats" in main and main.run_stats:
-					main.run_stats.record_damage_dealt(final_dmg, crit)
+				if is_finisher:
+					HitFeedback.finisher_hit(target.global_position, final_dmg, target)
+				else:
+					HitFeedback.enemy_hit(target.global_position, final_dmg, target, crit)
+				damage_dealt.emit(final_dmg, crit)
 
 
 # --- Soul drain API (called by demons) ---
@@ -420,12 +431,8 @@ func take_damage(amount: float) -> void:
 	health -= actual
 	_hit_iframe_timer = HIT_IFRAME_DURATION
 	health_changed.emit(health)
-	# Stats tracking
-	var main := get_tree().current_scene
-	if main and "run_stats" in main and main.run_stats:
-		main.run_stats.record_damage_taken(actual)
-	if has_node("/root/HitFeedback"):
-		get_node("/root/HitFeedback").player_hit(global_position, actual, sprite)
+	damage_taken.emit(actual)
+	HitFeedback.player_hit(global_position, actual, sprite)
 	# Combo resets when hit
 	_combo_stage = 0
 	_combo_window_open = false
@@ -857,39 +864,38 @@ func _process_magnet(_delta: float) -> void:
 
 # --- Signature skill implementations ---
 
-func _skill_whirling_blade(_skill: SkillResource) -> void:
+func _skill_whirling_blade(skill: SkillResource) -> void:
 	# Sarah: spin attack hitting all nearby enemies
 	if attack_area == null:
 		return
 	attack_shape.disabled = false
 	attack_area.monitoring = true
+	var dmg: float = stats.attack_damage() * skill.damage_multiplier
 	for body in attack_area.get_overlapping_bodies():
 		if body.is_in_group("enemies") and body.has_method("take_damage"):
-			body.take_damage(stats.attack_damage() * 1.5)
+			body.take_damage(dmg)
 	await get_tree().create_timer(0.2).timeout
 	if is_instance_valid(self) and attack_shape:
 		attack_shape.disabled = true
 		attack_area.monitoring = false
 
 
-func _skill_ground_pound(_skill: SkillResource) -> void:
+func _skill_ground_pound(skill: SkillResource) -> void:
 	# Maddie: AoE shockwave
-	var radius := 4.0
+	var radius: float = skill.radius
+	var dmg: float = stats.attack_damage() * skill.damage_multiplier
 	for body in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(body):
 			continue
 		if body.global_position.distance_to(global_position) <= radius and body.has_method("take_damage"):
-			body.take_damage(stats.attack_damage() * 2.0)
-	if has_node("/root/HitFeedback"):
-		var hf := get_node("/root/HitFeedback")
-		if hf.has_method("explosion"):
-			hf.explosion(global_position, radius)
+			body.take_damage(dmg)
+	HitFeedback.explosion(global_position, radius)
 
 
-func _skill_soul_bolt(_skill: SkillResource) -> void:
-	# Chan Xaic: hit nearest enemy
+func _skill_soul_bolt(skill: SkillResource) -> void:
+	# Chan Xaic: hit nearest enemy within radius
 	var nearest: Node3D = null
-	var best_dist := 12.0
+	var best_dist: float = skill.radius
 	for body in get_tree().get_nodes_in_group("enemies"):
 		if not is_instance_valid(body):
 			continue
@@ -898,16 +904,17 @@ func _skill_soul_bolt(_skill: SkillResource) -> void:
 			nearest = body
 			best_dist = d
 	if nearest and nearest.has_method("take_damage"):
-		nearest.take_damage(stats.attack_damage() * 2.5)
+		nearest.take_damage(stats.attack_damage() * skill.damage_multiplier)
 
 
-func _skill_ward_pulse(_skill: SkillResource) -> void:
+func _skill_ward_pulse(skill: SkillResource) -> void:
 	# Aiyana: heal all players in range
-	var radius := 5.0
+	var radius: float = skill.radius
+	var heal: float = skill.heal_amount
 	for p in get_tree().get_nodes_in_group("player"):
 		if not is_instance_valid(p):
 			continue
 		if p.global_position.distance_to(global_position) <= radius:
-			p.health = min(p.health + 20.0, p.stats.max_health())
+			p.health = min(p.health + heal, p.stats.max_health())
 			if p.has_signal("health_changed"):
 				p.health_changed.emit(p.health)

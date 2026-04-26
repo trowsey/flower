@@ -19,10 +19,8 @@ func _ready() -> void:
 		global_position = _get_focus_point() + offset
 		look_at(_get_focus_point())
 	_shake = CameraShake.new()
-	if has_node("/root/HitFeedback"):
-		var hf := get_node("/root/HitFeedback")
-		hf.request_camera_shake.connect(_on_request_shake)
-		hf.request_hit_stop.connect(_on_request_hit_stop)
+	HitFeedback.request_camera_shake.connect(_on_request_shake)
+	HitFeedback.request_hit_stop.connect(_on_request_hit_stop)
 
 
 func _get_focus_point() -> Vector3:

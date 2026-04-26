@@ -1,4 +1,7 @@
 # Minimap: top-down 2D map of explored fog tiles + enemy/player markers
+#
+# STATUS: Phase 3 stub per docs/specs/world-generation-v2.md. Not yet
+# instantiated in the HUD.
 extends Control
 class_name Minimap
 

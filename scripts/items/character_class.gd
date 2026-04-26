@@ -29,6 +29,9 @@ enum Id { SARAH, MADDIE, CHAN_XAIC, AIYANA }
 @export var signature_skill_name: String = ""
 @export var signature_skill_cost: float = 20.0
 @export var signature_skill_cooldown: float = 5.0
+@export var signature_skill_damage_mult: float = 0.0
+@export var signature_skill_radius: float = 3.0
+@export var signature_skill_heal: float = 0.0
 
 
 static func all() -> Array:
@@ -70,6 +73,8 @@ static func sarah() -> CharacterClass:
 	c.signature_skill_name = "Whirling Blade"
 	c.signature_skill_cost = 15.0
 	c.signature_skill_cooldown = 4.0
+	c.signature_skill_damage_mult = 1.5
+	c.signature_skill_radius = 2.5
 	return c
 
 
@@ -90,6 +95,8 @@ static func maddie() -> CharacterClass:
 	c.signature_skill_name = "Ground Pound"
 	c.signature_skill_cost = 25.0
 	c.signature_skill_cooldown = 6.0
+	c.signature_skill_damage_mult = 2.0
+	c.signature_skill_radius = 4.0
 	return c
 
 
@@ -111,6 +118,8 @@ static func chan_xaic() -> CharacterClass:
 	c.signature_skill_name = "Soul Bolt"
 	c.signature_skill_cost = 12.0
 	c.signature_skill_cooldown = 1.5
+	c.signature_skill_damage_mult = 2.5
+	c.signature_skill_radius = 12.0  # max targeting distance
 	return c
 
 
@@ -131,6 +140,8 @@ static func aiyana() -> CharacterClass:
 	c.signature_skill_name = "Ward Pulse"
 	c.signature_skill_cost = 20.0
 	c.signature_skill_cooldown = 5.0
+	c.signature_skill_radius = 5.0
+	c.signature_skill_heal = 20.0
 	return c
 
 
@@ -150,6 +161,9 @@ func make_signature_skill() -> SkillResource:
 	s.skill_name = signature_skill_name
 	s.soul_cost = signature_skill_cost
 	s.cooldown = signature_skill_cooldown
+	s.damage_multiplier = signature_skill_damage_mult
+	s.radius = signature_skill_radius
+	s.heal_amount = signature_skill_heal
 	s.execute_method = _signature_skill_method()
 	return s
 

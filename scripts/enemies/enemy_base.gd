@@ -18,6 +18,8 @@ signal health_changed(new_value: float)
 @export var enemy_type: String = "generic"
 @export var elite: bool = false
 @export var affixes: Array[String] = []
+# Item level for loot drops. Set by spawner at spawn time.
+@export var item_level: int = 1
 
 var health: float = 30.0
 var alive: bool = true
@@ -129,7 +131,6 @@ func _spawn_item_drop() -> void:
 	var pickup: Node = pickup_scene.instantiate()
 	get_tree().current_scene.add_child(pickup)
 	pickup.global_position = global_position + Vector3(0, 0.3, 0)
-	var item_level: int = _current_item_level()
 	var is_boss: bool = has_meta("is_boss") and bool(get_meta("is_boss"))
 	# Try set drop first (rare); bosses get higher set chance
 	var item: ItemResource = ItemFactory.maybe_make_set_item(
@@ -146,10 +147,8 @@ func _spawn_item_drop() -> void:
 
 
 func _current_item_level() -> int:
-	var main := get_tree().current_scene
-	if main and "current_wave" in main:
-		return 1 + int(main.current_wave) / 2
-	return 1
+	# Backwards-compat shim. Prefer the `item_level` property set by spawners.
+	return item_level
 
 
 func _spawn_blood_particles() -> void:
@@ -185,8 +184,7 @@ func _explode() -> void:
 			continue
 		if node.has_method("take_damage"):
 			node.take_damage(death_explosion_damage)
-	if has_node("/root/HitFeedback"):
-		get_node("/root/HitFeedback").explosion(global_position, death_explosion_radius)
+	HitFeedback.explosion(global_position, death_explosion_radius)
 
 
 func distance_to_player() -> float:

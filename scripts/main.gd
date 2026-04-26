@@ -87,11 +87,10 @@ func _ready() -> void:
 		var s0: Dictionary = slots[0]
 		existing.player_index = 0
 		existing.device_id = s0.get("device_id", -1)
-		existing.character_class_id = s0.get("character_class_id", CharacterClassScript.Id.SARAH)
+		var cls0: int = s0.get("character_class_id", CharacterClassScript.Id.SARAH)
 		existing.global_position = SPAWN_OFFSETS[0]
-		# Player._ready already ran (children before parent), so re-apply
-		# the class explicitly and refill resources to full.
-		_apply_class(existing)
+		# Player._ready already ran with default class_id=-1, so re-apply now.
+		existing.apply_character_class(cls0)
 
 	# Spawn additional players for slot 1+
 	for i in range(1, slots.size()):
@@ -100,15 +99,19 @@ func _ready() -> void:
 		p.name = "Player%d" % (i + 1)
 		p.player_index = i
 		p.device_id = s.get("device_id", i)
+		# Set class_id BEFORE add_child so player._ready picks it up.
 		p.character_class_id = s.get("character_class_id", CharacterClassScript.Id.MADDIE)
 		add_child(p)
 		p.global_position = SPAWN_OFFSETS[i % SPAWN_OFFSETS.size()]
-		_apply_class(p)
 
 	# Wire run-stats signal connections
 	for p in get_tree().get_nodes_in_group("player"):
 		if p.has_signal("level_up"):
 			p.level_up.connect(func(lv): run_stats.record_level(lv))
+		if p.has_signal("damage_dealt"):
+			p.damage_dealt.connect(func(amt, crit): run_stats.record_damage_dealt(amt, crit))
+		if p.has_signal("damage_taken"):
+			p.damage_taken.connect(func(amt): run_stats.record_damage_taken(amt))
 		if p.has_signal("gold_changed"):
 			var prev: int = p.gold
 			p.gold_changed.connect(func(v):
@@ -164,6 +167,8 @@ func _spawn_wave() -> void:
 			continue
 		var enemy: Node3D = scene.instantiate()
 		_scale_enemy_for_difficulty(enemy, avg_level, wave_mult)
+		if "item_level" in enemy:
+			enemy.item_level = 1 + current_wave / 2
 		if i == force_elite_index and "elite" in enemy:
 			enemy.elite = true
 		# Boss every 10 waves: index 0 gets massive HP/dmg + scale
@@ -229,22 +234,6 @@ func _scale_enemy_for_difficulty(e: Node, avg_level: float, wave_mult: float = 1
 		e.damage *= (1.0 + max(0.0, avg_level - 1.0) * 0.10) * wave_mult
 	if "health" in e and "max_health" in e:
 		e.health = e.max_health
-
-
-func _apply_class(p: Node) -> void:
-	if p.character_class_id < 0:
-		return
-	var cls: Resource = CharacterClassScript.by_id(p.character_class_id)
-	if cls == null or p.stats == null:
-		return
-	cls.apply_to_stats(p.stats)
-	p.health = p.stats.max_health()
-	p.soul = p.stats.max_soul()
-	if p.has_signal("max_health_changed"):
-		p.max_health_changed.emit(p.stats.max_health())
-		p.max_soul_changed.emit(p.stats.max_soul())
-		p.health_changed.emit(p.health)
-		p.soul_changed.emit(p.soul)
 
 
 func _on_biome_changed(biome: Resource) -> void:

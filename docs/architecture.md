@@ -258,6 +258,17 @@ a specific change, you don't have a real concern yet.
 We do not maintain a heavyweight ADR process. Instead, when a non-obvious
 choice is made, add a one-paragraph entry here. New entries go on top.
 
+### ADR-010: RunStats is a scene-child, not a fifth autoload
+*Why:* Per-run statistics (kills, time, damage dealt/taken, gold gained) are
+*scoped to a single run*, not the whole session — they should reset when
+`reload_current_scene()` runs. An autoload would persist across scene loads,
+which is the wrong lifetime. So `RunStats` is created as a child of `main` in
+`main.gd._ready()` and consumers subscribe to it via `main.gd` wiring up
+player signals (`damage_dealt`, `damage_taken`, `level_up`, `gold_changed`,
+`item_picked_up`). Players themselves do **not** reach into
+`current_scene.run_stats` — they just emit signals. This keeps the
+autoload budget at four (ADR-005/008) without adding a fragile global.
+
 ### ADR-009: Settings as a static module, not an autoload
 *Why:* Settings (audio bus levels, fullscreen, gameplay toggles) is *pure*
 state on disk plus pure read/write functions. It has no per-frame logic, no
