@@ -109,6 +109,7 @@ class PlayerPanel:
 var _panels: Array = []
 var _wave_label: Label
 var _enemy_label: Label
+var _timer_label: Label
 
 
 func _ready() -> void:
@@ -136,6 +137,11 @@ func _build_wave_banner() -> void:
 	_enemy_label.add_theme_font_size_override("font_size", 14)
 	_enemy_label.modulate = Color(0.85, 0.85, 0.85)
 	box.add_child(_enemy_label)
+	_timer_label = Label.new()
+	_timer_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_timer_label.add_theme_font_size_override("font_size", 12)
+	_timer_label.modulate = Color(0.6, 0.6, 0.6)
+	box.add_child(_timer_label)
 
 
 func _wire_main_signals() -> void:
@@ -154,9 +160,13 @@ func _on_wave_started(wave: int) -> void:
 			var b = main.current_biome()
 			if b:
 				biome_name = " — " + b.display_name
-		_wave_label.text = "WAVE %d%s" % [wave, biome_name]
+		var prefix := ""
+		if wave % 10 == 0:
+			prefix = "BOSS "
+		_wave_label.text = "%sWAVE %d%s" % [prefix, wave, biome_name]
 		var tw := create_tween()
-		_wave_label.modulate = Color(1, 0.85, 0.2)
+		var color: Color = Color(1, 0.2, 0.2) if wave % 10 == 0 else Color(1, 0.85, 0.2)
+		_wave_label.modulate = color
 		_wave_label.scale = Vector2(1.4, 1.4)
 		_wave_label.pivot_offset = _wave_label.size * 0.5
 		tw.parallel().tween_property(_wave_label, "scale", Vector2.ONE, 0.4)
@@ -206,3 +216,7 @@ func _process(_delta: float) -> void:
 	if _enemy_label:
 		var n := get_tree().get_nodes_in_group("enemies").size()
 		_enemy_label.text = "Enemies: %d" % n if n > 0 else "Wave clear — next in 8s"
+	if _timer_label:
+		var main := get_tree().current_scene
+		if main and "run_stats" in main and main.run_stats:
+			_timer_label.text = main.run_stats.format_time()

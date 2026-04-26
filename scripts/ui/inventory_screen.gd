@@ -275,6 +275,27 @@ func _refresh_tooltip() -> void:
 		var v: float = float(item.stat_modifiers[k])
 		var sign: String = "+" if v >= 0 else ""
 		lines.append("%s%s %s" % [sign, _format_stat_value(k, v), _readable_stat(k)])
+	# If hovering a bag item that can be equipped, show diff vs currently equipped
+	var is_bag_item: bool = _hovered_bag_item(item)
+	if is_bag_item and item.item_type != ItemResource.ItemType.CONSUMABLE and player and player.equipment:
+		var equipped: ItemResource = player.equipment.get_equipped(item.item_type)
+		if equipped:
+			lines.append("[color=#888888]— vs equipped —[/color]")
+			var keys_seen: Dictionary = {}
+			for k in item.stat_modifiers.keys():
+				keys_seen[k] = true
+			for k in equipped.stat_modifiers.keys():
+				keys_seen[k] = true
+			for k in keys_seen.keys():
+				var new_v: float = float(item.stat_modifiers.get(k, 0.0))
+				var old_v: float = float(equipped.stat_modifiers.get(k, 0.0))
+				var diff: float = new_v - old_v
+				if abs(diff) < 0.001:
+					continue
+				var col: String = "#33cc66" if diff > 0 else "#cc4444"
+				var sgn: String = "+" if diff > 0 else ""
+				lines.append("[color=%s]%s%s %s[/color]" %
+					[col, sgn, _format_stat_value(k, diff), _readable_stat(k)])
 	if item.set_id != "":
 		var set_def = ItemSetScript.by_id(item.set_id)
 		if set_def:
@@ -297,6 +318,16 @@ func _refresh_tooltip() -> void:
 						 _format_stat_value(bk, bv), _readable_stat(bk)])
 				lines.append("[color=%s](%d) %s[/color]" % [col, int(t), ", ".join(parts)])
 	_tooltip.text = "\n".join(lines)
+
+
+func _hovered_bag_item(item: ItemResource) -> bool:
+	# Returns true if the hovered button corresponds to a bag slot (not equip slot)
+	if _hovered_btn == null or player == null:
+		return false
+	for slot_type in _equip_slots.keys():
+		if _equip_slots[slot_type] == _hovered_btn:
+			return false
+	return true
 
 
 func _item_for_button(btn: Button) -> ItemResource:

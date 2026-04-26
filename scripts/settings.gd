@@ -19,7 +19,7 @@ const DEFAULTS := {
 	},
 	"gameplay": {
 		"damage_numbers": true,
-		"loot_magnet_radius": 3.0,
+		"loot_magnet_radius": 4.0,
 	},
 }
 
@@ -116,7 +116,7 @@ static func get_loot_magnet_radius() -> float:
 
 
 static func set_loot_magnet_radius(r: float) -> void:
-	_set_value("gameplay", "loot_magnet_radius", clamp(r, 1.0, 6.0))
+	_set_value("gameplay", "loot_magnet_radius", clamp(r, 1.0, 10.0))
 
 
 # --- Reset / apply-on-load ---

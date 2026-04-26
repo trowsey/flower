@@ -56,6 +56,14 @@ func soul_drain_resist() -> float:
 	return base_soul_drain_resist + modifiers.get("soul_drain_resist", 0.0)
 
 
+func crit_chance_bonus() -> float:
+	return modifiers.get("crit_chance_bonus", 0.0)
+
+
+func crit_damage_bonus() -> float:
+	return modifiers.get("crit_damage_bonus", 0.0)
+
+
 func notify_changed() -> void:
 	stats_changed.emit()
 
@@ -72,7 +80,8 @@ func set_modifiers(new_mods: Dictionary) -> void:
 func xp_required_for_level(target_level: int) -> float:
 	if target_level <= 1:
 		return 0.0
-	return 100.0 * float(target_level - 1) * pow(1.2, target_level - 1)
+	# Smoother curve: linear with mild compounding (was 1.2^n which got brutal late)
+	return 100.0 * float(target_level - 1) * pow(1.12, target_level - 1)
 
 
 func add_xp(amount: float) -> Array:

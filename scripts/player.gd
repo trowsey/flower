@@ -26,6 +26,10 @@ const DASH_COOLDOWN := 1.2
 # Revive: another player must be within REVIVE_RADIUS for REVIVE_TIME seconds
 const REVIVE_RADIUS := 2.5
 const REVIVE_TIME := 2.0
+const HIT_IFRAME_DURATION := 0.4
+const POTION_COOLDOWN := 1.0
+const CRIT_CHANCE := 0.10
+const CRIT_MULTIPLIER := 2.0
 
 # Loot magnet: gold/items within MAGNET_RADIUS get pulled toward player
 const MAGNET_RADIUS := 3.0
@@ -82,6 +86,9 @@ var _direct_move := false
 var _facing_dir := Vector3.FORWARD
 var _latched_demon: Node3D = null
 var _soul_at_latch_start := 100.0
+var _hit_iframe_timer: float = 0.0
+var _potion_cooldown_timer: float = 0.0
+var _temp_buffs: Dictionary = {}  # id -> {timer: float, mods: Dictionary}
 
 var _combo_stage: int = 0
 var _combo_window_remaining: float = 0.0
@@ -340,13 +347,20 @@ func _deal_damage() -> void:
 			continue
 		if target.is_in_group("enemies") or target.is_in_group("destructibles"):
 			if target.has_method("take_damage"):
-				target.take_damage(dmg)
+				var crit: bool = randf() < (CRIT_CHANCE + stats.crit_chance_bonus())
+				var crit_mult: float = CRIT_MULTIPLIER + stats.crit_damage_bonus()
+				var final_dmg: float = dmg * (crit_mult if crit else 1.0)
+				target.take_damage(final_dmg)
 				if has_node("/root/HitFeedback"):
 					var hf := get_node("/root/HitFeedback")
 					if is_finisher:
-						hf.finisher_hit(target.global_position, dmg, target)
+						hf.finisher_hit(target.global_position, final_dmg, target)
 					else:
-						hf.enemy_hit(target.global_position, dmg, target)
+						hf.enemy_hit(target.global_position, final_dmg, target, crit)
+				# Stats tracking
+				var main := get_tree().current_scene
+				if main and "run_stats" in main and main.run_stats:
+					main.run_stats.record_damage_dealt(final_dmg, crit)
 
 
 # --- Soul drain API (called by demons) ---
@@ -396,12 +410,20 @@ func take_damage(amount: float) -> void:
 	# Dashing = invuln frames
 	if state == PlayerState.DASHING:
 		return
+	# Hit-iframes after a recent hit
+	if _hit_iframe_timer > 0.0:
+		return
 	# Downed players can't take more damage
 	if state == PlayerState.DOWNED:
 		return
 	var actual: float = max(amount - stats.defense(), 1.0)
 	health -= actual
+	_hit_iframe_timer = HIT_IFRAME_DURATION
 	health_changed.emit(health)
+	# Stats tracking
+	var main := get_tree().current_scene
+	if main and "run_stats" in main and main.run_stats:
+		main.run_stats.record_damage_taken(actual)
 	if has_node("/root/HitFeedback"):
 		get_node("/root/HitFeedback").player_hit(global_position, actual, sprite)
 	# Combo resets when hit
@@ -447,17 +469,62 @@ func spend_gold(amount: int) -> bool:
 	return true
 
 
+func sell_item(slot_index: int) -> int:
+	var item := inventory.get_item(slot_index)
+	if item == null:
+		return 0
+	var value: int = item.sell_value()
+	gold += value
+	inventory.remove(slot_index)
+	gold_changed.emit(gold)
+	return value
+
+
 func add_item(item: ItemResource) -> bool:
 	var slot := inventory.add(item)
 	if slot < 0:
 		return false
 	item_picked_up.emit(item)
+	# Auto-equip if slot is empty and item is equippable (better-than-nothing rule)
+	if item.item_type != ItemResource.ItemType.CONSUMABLE:
+		var equipped: ItemResource = equipment.get_equipped(item.item_type)
+		if equipped == null:
+			equip_item(slot)
 	return true
+
+
+func apply_temp_buff(id: String, mods: Dictionary, duration: float) -> void:
+	# If reapplied, refresh
+	_temp_buffs[id] = {"timer": duration, "mods": mods.duplicate()}
+	_recompute_modifiers()
+
+
+func _tick_temp_buffs(delta: float) -> void:
+	var expired: Array = []
+	for id in _temp_buffs.keys():
+		_temp_buffs[id].timer -= delta
+		if _temp_buffs[id].timer <= 0.0:
+			expired.append(id)
+	if expired.size() > 0:
+		for id in expired:
+			_temp_buffs.erase(id)
+		_recompute_modifiers()
+
+
+func _recompute_modifiers() -> void:
+	var totals: Dictionary = equipment.get_total_modifiers()
+	for id in _temp_buffs.keys():
+		var mods: Dictionary = _temp_buffs[id].mods
+		for k in mods.keys():
+			totals[k] = totals.get(k, 0.0) + float(mods[k])
+	stats.set_modifiers(totals)
 
 
 func use_consumable(slot_index: int) -> bool:
 	var item := inventory.get_item(slot_index)
 	if item == null or item.item_type != ItemResource.ItemType.CONSUMABLE:
+		return false
+	if _potion_cooldown_timer > 0.0:
 		return false
 	match item.consumable_effect:
 		"heal_health":
@@ -468,6 +535,7 @@ func use_consumable(slot_index: int) -> bool:
 			soul_changed.emit(soul)
 		_:
 			return false
+	_potion_cooldown_timer = POTION_COOLDOWN
 	inventory.remove(slot_index)
 	return true
 
@@ -503,7 +571,7 @@ func add_xp(amount: float) -> void:
 
 
 func _on_equipment_changed(_slot_type: int, _new_item: ItemResource, _old_item: ItemResource) -> void:
-	stats.set_modifiers(equipment.get_total_modifiers())
+	_recompute_modifiers()
 
 
 func _on_stats_changed() -> void:
@@ -566,6 +634,15 @@ func _physics_process(delta: float) -> void:
 	# Dash cooldown ticks regardless of state
 	if _dash_cooldown > 0.0:
 		_dash_cooldown = max(0.0, _dash_cooldown - delta)
+
+	# Damage iframes & potion cooldown
+	if _hit_iframe_timer > 0.0:
+		_hit_iframe_timer = max(0.0, _hit_iframe_timer - delta)
+	if _potion_cooldown_timer > 0.0:
+		_potion_cooldown_timer = max(0.0, _potion_cooldown_timer - delta)
+	# Tick temp buffs
+	if not _temp_buffs.is_empty():
+		_tick_temp_buffs(delta)
 
 	# Revive progress ticks while DOWNED
 	_process_revive(delta)

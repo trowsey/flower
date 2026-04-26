@@ -35,3 +35,18 @@ static func rarity_name(r: int) -> String:
 		Rarity.EPIC: return "Epic"
 		Rarity.LEGENDARY: return "Legendary"
 	return "Unknown"
+
+
+func sell_value() -> int:
+	# Base by rarity, scaled by item level. Set pieces are worth double.
+	var base: int = 5
+	match rarity:
+		Rarity.COMMON: base = 5
+		Rarity.UNCOMMON: base = 15
+		Rarity.RARE: base = 40
+		Rarity.EPIC: base = 100
+		Rarity.LEGENDARY: base = 250
+	var v: int = base + (item_level - 1) * 3
+	if set_id != "":
+		v *= 2
+	return v

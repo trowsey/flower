@@ -23,6 +23,36 @@ var health: float = 30.0
 var alive: bool = true
 var player: Node3D = null
 var _hit_flash_remaining: float = 0.0
+var _knockback: Vector3 = Vector3.ZERO
+
+
+func _process(delta: float) -> void:
+	if _hit_flash_remaining > 0.0:
+		_hit_flash_remaining = max(0.0, _hit_flash_remaining - delta)
+		_apply_hit_flash_modulate(_hit_flash_remaining > 0.0)
+	if _knockback.length_squared() > 0.001:
+		# Apply directly as position offset so subclass AI velocity isn't fought
+		global_position += _knockback * delta
+		_knockback = _knockback.move_toward(Vector3.ZERO, delta * 12.0)
+
+
+func _apply_hit_flash_modulate(active: bool) -> void:
+	for child in get_children():
+		if child is MeshInstance3D:
+			var mesh: MeshInstance3D = child
+			if active:
+				if mesh.get_meta("_orig_mod", null) == null:
+					mesh.set_meta("_orig_mod", mesh.material_override)
+				if mesh.material_override == null and mesh.mesh and mesh.mesh.surface_get_material(0):
+					var dup: StandardMaterial3D = mesh.mesh.surface_get_material(0).duplicate()
+					mesh.material_override = dup
+				if mesh.material_override is StandardMaterial3D:
+					(mesh.material_override as StandardMaterial3D).albedo_color = Color(2.0, 0.6, 0.6)
+			else:
+				var orig = mesh.get_meta("_orig_mod", null)
+				if orig != null:
+					mesh.material_override = orig
+				mesh.set_meta("_orig_mod", null)
 
 
 func _ready() -> void:
@@ -41,6 +71,12 @@ func take_damage(amount: float) -> void:
 	health -= amount
 	health_changed.emit(health)
 	_hit_flash_remaining = 0.1
+	# Knockback away from player
+	if player:
+		var away: Vector3 = (global_position - player.global_position)
+		away.y = 0.0
+		if away.length_squared() > 0.001:
+			_knockback = away.normalized() * 3.0
 	_spawn_blood_particles()
 	if health <= 0.0:
 		die()
@@ -62,12 +98,13 @@ func die() -> void:
 
 
 func _drop_loot() -> void:
-	var gold_amount := randi_range(gold_drop_min, gold_drop_max)
+	var is_boss: bool = has_meta("is_boss") and bool(get_meta("is_boss"))
+	var gold_amount := randi_range(gold_drop_min, gold_drop_max) * (4 if is_boss else 1)
 	if gold_amount > 0:
 		_spawn_gold(gold_amount)
 	var roll := randf()
 	var chance: float = item_drop_chance * (3.0 if elite else 1.0)
-	if roll < chance:
+	if is_boss or roll < chance:
 		_spawn_item_drop()
 
 
@@ -90,10 +127,17 @@ func _spawn_item_drop() -> void:
 	get_tree().current_scene.add_child(pickup)
 	pickup.global_position = global_position + Vector3(0, 0.3, 0)
 	var item_level: int = _current_item_level()
-	# Try set drop first (rare)
-	var item: ItemResource = ItemFactory.maybe_make_set_item(item_level)
+	var is_boss: bool = has_meta("is_boss") and bool(get_meta("is_boss"))
+	# Try set drop first (rare); bosses get higher set chance
+	var item: ItemResource = ItemFactory.maybe_make_set_item(
+		item_level, 0.25 if is_boss else 0.03)
 	if item == null:
-		item = ItemFactory.make_random(-1, ItemFactory.roll_rarity(1 if elite else 0), item_level)
+		var rarity_floor: int = (
+			ItemResource.Rarity.LEGENDARY if is_boss
+			else (ItemResource.Rarity.RARE if elite else 0))
+		var rolled: int = ItemFactory.roll_rarity(1 if elite else 0)
+		var rarity: int = max(rolled, rarity_floor)
+		item = ItemFactory.make_random(-1, rarity, item_level)
 	if pickup.has_method("set_item"):
 		pickup.set_item(item)
 

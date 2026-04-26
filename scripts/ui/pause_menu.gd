@@ -24,6 +24,19 @@ func _ready() -> void:
 	if _fullscreen:
 		_fullscreen.button_pressed = Settings.get_fullscreen()
 		_fullscreen.toggled.connect(func(on): Settings.set_fullscreen(on))
+	_install_controls_help()
+
+
+func _install_controls_help() -> void:
+	var vbox: Node = get_node_or_null("Panel/VBox")
+	if vbox == null:
+		return
+	var help := Label.new()
+	help.name = "ControlsHelp"
+	help.add_theme_font_size_override("font_size", 12)
+	help.modulate = Color(0.75, 0.75, 0.75)
+	help.text = "Controls\n  WASD / Stick — move\n  LMB / X — attack\n  Space / A — dash\n  I — inventory   C — character\n  1-4 — skills\n  Esc / Start — pause"
+	vbox.add_child(help)
 
 
 func _unhandled_input(event: InputEvent) -> void:

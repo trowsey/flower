@@ -20,6 +20,8 @@ const RunStatsScript := preload("res://scripts/run_stats.gd")
 const TutorialScript := preload("res://scripts/ui/tutorial_overlay.gd")
 const InventoryScreenScript := preload("res://scripts/ui/inventory_screen.gd")
 const LevelUpPanelScript := preload("res://scripts/ui/level_up_panel.gd")
+const DamageIndicatorScript := preload("res://scripts/ui/damage_indicator.gd")
+const ShrineScript := preload("res://scripts/world/shrine.gd")
 
 const SPAWN_OFFSETS := [
 	Vector3(0, 0.5, 0),
@@ -67,6 +69,11 @@ func _ready() -> void:
 	lvl.name = "LevelUpPanel"
 	add_child(lvl)
 
+	# Damage indicator (red vignette on hit)
+	var dmg_ind: CanvasLayer = DamageIndicatorScript.new()
+	dmg_ind.name = "DamageIndicator"
+	add_child.call_deferred(dmg_ind)
+
 	# Defaults if PartyConfig wasn't set (e.g. running main.tscn directly)
 	var slots: Array = PartyConfig.slots
 	if slots.size() == 0:
@@ -109,6 +116,8 @@ func _ready() -> void:
 					run_stats.record_gold(v - prev)
 				prev = v
 			)
+		if p.has_signal("item_picked_up"):
+			p.item_picked_up.connect(func(it): run_stats.record_item_picked(it))
 
 	# Spawn first wave after a short delay so HUD/scene settle
 	await get_tree().create_timer(0.5).timeout
@@ -136,11 +145,13 @@ func _spawn_wave() -> void:
 	var count: int = BASE_ENEMIES + (_player_count - 1) * PER_PLAYER_BONUS + (current_wave - 1) * 2
 	var avg_level: float = _avg_player_level()
 	var wave_mult: float = 1.0 + (current_wave - 1) * 0.10
+	wave_mult *= float(PartyConfig.get_meta("difficulty_mult", 1.0))
 	if biome_manager:
 		wave_mult *= 1.0 + 0.20 * float(biome_manager.difficulty_loop)
 	var force_elite_index: int = -1
 	if current_wave % 5 == 0:
 		force_elite_index = randi() % count
+	var is_boss_wave: bool = current_wave % 10 == 0
 	var pool: Array = ENEMY_SCENES
 	if biome_manager:
 		var biome_pool: Array = biome_manager.enemy_pool()
@@ -155,6 +166,19 @@ func _spawn_wave() -> void:
 		_scale_enemy_for_difficulty(enemy, avg_level, wave_mult)
 		if i == force_elite_index and "elite" in enemy:
 			enemy.elite = true
+		# Boss every 10 waves: index 0 gets massive HP/dmg + scale
+		if is_boss_wave and i == 0:
+			if "elite" in enemy:
+				enemy.elite = true
+			if "max_health" in enemy:
+				enemy.max_health *= 5.0
+				enemy.health = enemy.max_health
+			if "damage" in enemy:
+				enemy.damage *= 1.8
+			if "xp_reward" in enemy:
+				enemy.xp_reward *= 5.0
+			enemy.scale = Vector3(1.6, 1.6, 1.6)
+			enemy.set_meta("is_boss", true)
 		var angle: float = (TAU / float(count)) * i + randf() * 0.3
 		var pos := Vector3(cos(angle), 0, sin(angle)) * SPAWN_RING_RADIUS
 		add_child(enemy)
@@ -162,15 +186,26 @@ func _spawn_wave() -> void:
 		# Hook tree_exiting once for kill stats
 		enemy.tree_exiting.connect(func(): _on_enemy_removed(enemy))
 	emit_signal("wave_started", current_wave)
+	# Shrine every 3 waves (skip first wave)
+	if current_wave >= 3 and current_wave % 3 == 0:
+		_spawn_shrine()
+
+
+func _spawn_shrine() -> void:
+	var shrine: Node3D = ShrineScript.new()
+	shrine.name = "Shrine"
+	add_child(shrine)
+	var angle: float = randf() * TAU
+	var dist: float = 6.0 + randf() * 4.0
+	shrine.global_position = Vector3(cos(angle) * dist, 0.5, sin(angle) * dist)
 
 
 func _on_enemy_removed(e: Node) -> void:
 	if not is_instance_valid(e) or run_stats == null:
 		return
-	# Only counts if it died (had health <= 0); spawn-cleanup also fires this
-	# but for now treat any removal as a kill — close enough.
 	var is_elite: bool = e.get("elite") if "elite" in e else false
-	run_stats.record_kill(is_elite)
+	var is_boss: bool = bool(e.get_meta("is_boss", false))
+	run_stats.record_kill(is_elite, is_boss)
 
 
 func _avg_player_level() -> float:
