@@ -207,6 +207,15 @@ func _test_inventory() -> Dictionary:
 func _test_soul_drain() -> Dictionary:
 	if player == null:
 		return {"passed": false, "message": "no player"}
+	# Isolate from the live wave: top up health and despawn any enemies that
+	# might wander in and kill the player mid-drain (which would flip state
+	# from BEING_DRAINED to HEALTH_DEAD and silently skip the drain code).
+	player.health = player.stats.max_health()
+	player.soul = player.stats.max_soul()
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(e):
+			e.queue_free()
+	await get_tree().process_frame
 	# Create fake demon node — attach to player to ensure valid parent
 	var demon := Node3D.new()
 	demon.name = "FakeDemon"
@@ -227,4 +236,4 @@ func _test_soul_drain() -> Dictionary:
 	demon.queue_free()
 	if player.state != player.PlayerState.NORMAL:
 		return {"passed": false, "message": "did not return to NORMAL"}
-	return {"passed": drained, "message": ("drained %.2f" % (soul_before - player.soul)) if drained else "soul did not decrease"}
+	return {"passed": drained, "message": "drained %.2f" % (soul_before - player.soul) if drained else "soul did not decrease (rate=%.2f)" % player.get_soul_drain_rate()}

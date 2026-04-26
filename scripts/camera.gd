@@ -8,7 +8,7 @@ extends Camera3D
 
 var _target: Node3D
 var _shake: CameraShake = null
-var _hit_stop_remaining: float = 0.0
+var _hit_stop_end_ms: int = 0
 
 
 func _ready() -> void:
@@ -59,11 +59,20 @@ func _on_request_shake(strength: float, duration: float) -> void:
 
 
 func _on_request_hit_stop(duration: float) -> void:
-	_hit_stop_remaining = max(_hit_stop_remaining, duration)
+	# Track end time across overlapping requests. If a longer hit-stop is
+	# scheduled while a shorter one is still pending, the earlier timer used
+	# to expire and reset Engine.time_scale to 1.0 prematurely.
+	var now_ms: int = Time.get_ticks_msec()
+	var requested_end: int = now_ms + int(duration * 1000.0)
+	if requested_end > _hit_stop_end_ms:
+		_hit_stop_end_ms = requested_end
 	Engine.time_scale = 0.05
 	await get_tree().create_timer(duration, true, false, true).timeout
-	_hit_stop_remaining = 0.0
-	Engine.time_scale = 1.0
+	if not is_instance_valid(self):
+		return
+	# Only restore time_scale if no later overlapping request extended the stop.
+	if Time.get_ticks_msec() >= _hit_stop_end_ms:
+		Engine.time_scale = 1.0
 
 
 func _physics_process(delta: float) -> void:

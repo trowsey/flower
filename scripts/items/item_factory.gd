@@ -38,6 +38,12 @@ const MODIFIER_RANGES := {
 
 const RARITY_WEIGHTS := [60.0, 25.0, 10.0, 4.0, 1.0]
 
+# Modifier keys whose raw rolled value is a percentage (e.g. 25 means 25%) and
+# must be stored as a 0-1 fraction. Without this normalization a single rare
+# weapon rolling soul_drain_resist would grant >100% resist and make the player
+# permanently immune to soul drain.
+const PERCENT_MODIFIERS := ["attack_speed_bonus", "soul_drain_resist", "crit_chance_bonus", "crit_damage_bonus"]
+
 
 static func roll_rarity(bonus_tier: int = 0) -> int:
 	var total: float = 0.0
@@ -80,7 +86,13 @@ static func make_random(item_type: int = -1, rarity: int = -1, item_level: int =
 		if i >= available_mods.size():
 			break
 		var key: String = available_mods[i]
-		mods[key] = randf_range(float(ranges.value_min), float(ranges.value_max)) * lvl_mult
+		var raw: float = randf_range(float(ranges.value_min), float(ranges.value_max)) * lvl_mult
+		# Percent-style stats are stored as 0-1 fractions; rolled values are
+		# expressed in percentage points and need to be normalized so that a
+		# legendary roll of 50 means +50% rather than 5000%.
+		if key in PERCENT_MODIFIERS:
+			raw *= 0.01
+		mods[key] = raw
 	item.stat_modifiers = mods
 
 	var primary_key: String = mods.keys()[0] if mods.size() > 0 else "attack_damage_flat"
