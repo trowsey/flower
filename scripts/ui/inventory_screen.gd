@@ -16,7 +16,7 @@ var _equip_slots: Dictionary = {}  # ItemType -> Button
 var _stat_label: RichTextLabel
 var _tooltip: RichTextLabel
 var _hovered_btn: Button
-const ItemSetScript = preload("res://scripts/items/item_set.gd") = null
+const ItemSetScript = preload("res://scripts/items/item_set.gd")
 
 
 func _ready() -> void:
