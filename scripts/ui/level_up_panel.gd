@@ -97,7 +97,7 @@ func _build_panel() -> void:
 		var plus := Button.new()
 		plus.text = "+"
 		plus.custom_minimum_size = Vector2(40, 28)
-		var k := key
+		var k: String = key
 		plus.pressed.connect(func(): _spend(k))
 		_plus_buttons[key] = plus
 		row.add_child(plus)

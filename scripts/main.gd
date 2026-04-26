@@ -33,8 +33,8 @@ const SPAWN_OFFSETS := [
 var _wave_timer: float = 0.0
 var _player_count: int = 1
 var current_wave: int = 1
-var run_stats: RunStats = null
-var biome_manager: BiomeManager = null
+var run_stats: Node = null  # RunStats; untyped to avoid class_name resolution under custom SceneTree
+var biome_manager: Node = null  # BiomeManager; same reason
 signal wave_started(wave: int)
 signal wave_cleared(wave: int)
 signal biome_changed(biome: Resource)
