@@ -49,3 +49,13 @@ func finisher_hit(world_position: Vector3, amount: float, sprite_node: Node3D = 
 	_damage_number(world_position, amount, Color(1, 0.7, 0.1))
 	if sprite_node:
 		request_sprite_flash.emit(sprite_node, Color.WHITE, 0.15)
+
+
+func explosion(world_position: Vector3, radius: float) -> void:
+	# Visual + game-feel response for an AoE explosion. Damage is dealt by
+	# the caller; this only orchestrates shake/hit-stop/numbers.
+	var intensity: float = clamp(0.2 + radius * 0.05, 0.2, 0.6)
+	var duration: float = clamp(0.2 + radius * 0.03, 0.2, 0.5)
+	_shake(intensity, duration)
+	request_hit_stop.emit(0.06)
+	_damage_number(world_position, radius, Color(1, 0.55, 0.1))
