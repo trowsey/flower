@@ -152,7 +152,10 @@ func _current_item_level() -> int:
 
 
 func _spawn_blood_particles() -> void:
-	var scene := load("res://scenes/effects/blood_particles.tscn")
+	const PATH := "res://scenes/effects/blood_particles.tscn"
+	if not ResourceLoader.exists(PATH):
+		return
+	var scene := load(PATH)
 	if scene == null:
 		return
 	var p: Node = scene.instantiate()
@@ -161,7 +164,10 @@ func _spawn_blood_particles() -> void:
 
 
 func _spawn_death_particles() -> void:
-	var scene := load("res://scenes/effects/death_particles.tscn")
+	const PATH := "res://scenes/effects/death_particles.tscn"
+	if not ResourceLoader.exists(PATH):
+		return
+	var scene := load(PATH)
 	if scene == null:
 		return
 	var p: Node = scene.instantiate()

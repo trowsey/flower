@@ -36,6 +36,18 @@ Ships code through test-driven development. Every feature follows the full TDD p
 - [ ] Keep architecture simple, readable, and Godot-idiomatic
 - [ ] Ship quality code through adversarial review
 
+## Definition of Done
+
+A change is **done** when:
+
+1. `./scripts/preflight.sh` exits green (parse-check + GUT + both autobots).
+2. New tests have been added for new behavior, and they pass.
+3. Any autobot/test failures introduced by the change are fixed in the same commit — never deferred to "baseline noise."
+4. `docs/architecture.md` is updated if the change affects autoloads, signal topology, or the system map.
+5. The commit message explains *why*, not just *what*.
+
+If preflight is red before your change, fix preflight first (or escalate).
+
 ## Agents
 
 | Agent | Role | Purpose |
