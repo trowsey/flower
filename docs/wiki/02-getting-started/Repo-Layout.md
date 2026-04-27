@@ -163,14 +163,14 @@ The TDD pipeline definitions, mapped to Castlevania character names (ADR-003):
 
 ```
 SQUAD.md       # Squad mission, output format
-sypha.md       # Spec author
-grant.md       # Architect / spec reviewer
-trevor.md      # Test author
-richter.md     # Test reviewer
-shanoa.md      # Implementer
-julius.md      # Code reviewer
-maria.md       # Test runner
-alucard.md     # Lead / orchestrator
+spec-writer.md       # Spec author
+architect.md       # Architect / spec reviewer
+test-writer.md      # Test author
+test-reviewer.md     # Test reviewer
+implementer.md      # Implementer
+code-reviewer.md      # Code reviewer
+test-runner.md       # Test runner
+lead.md     # Lead / orchestrator
 ```
 
-When you (an agent) start a new feature, the entry point is Sypha (write a spec under `docs/specs/`), then run the squad downstream. Existing specs are the contract — agents trust them over freelance interpretation (ADR-002).
+When you (an agent) start a new feature, the entry point is Spec-writer (write a spec under `docs/specs/`), then run the squad downstream. Existing specs are the contract — agents trust them over freelance interpretation (ADR-002).

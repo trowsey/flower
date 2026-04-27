@@ -178,7 +178,7 @@ assets/
 ## Open Questions
 
 1. **Frame size**: 64×64 for all, or 128×128 for boss only? Need to check Sarah's actual frame size for reference.
-2. **Placeholder art**: Should Trevor use colored rectangles as placeholders during development, or do we source assets first? (Recommend: Trevor implements with placeholders, Sypha sources real art in parallel)
+2. **Placeholder art**: Should Test-writer use colored rectangles as placeholders during development, or do we source assets first? (Recommend: Test-writer implements with placeholders, Spec-writer sources real art in parallel)
 3. **Custom art**: If free assets don't match the vibe, is Tim open to commissioning pixel art? Budget?
 4. **Sprite sheet vs individual files**: Godot's `SpriteFrames` supports both. Individual files (like player.tscn uses) are simpler for iteration. Recommend individual files.
 5. **Emerge animation**: Can this be shared across demon types (same claws-from-ground), or does each need a unique emerge?

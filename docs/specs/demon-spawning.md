@@ -226,7 +226,7 @@ scenes/
 
 ## Open Questions
 
-1. **Emerge particles**: Add a dust/debris GPUParticles3D at spawn point during emerge? (Recommend yes — Sypha task)
+1. **Emerge particles**: Add a dust/debris GPUParticles3D at spawn point during emerge? (Recommend yes — Spec-writer task)
 2. **Spawn point visibility in editor**: Custom icon for SpawnPoint in the editor? Godot supports `@icon` annotation
 3. **Scripted spawns**: Do we need an API for cutscene/event-triggered spawns (e.g., boss enters when player opens a door)? If so, `SpawnManager.force_spawn(scene, position)` method
 4. **Spawn point depletion**: When a spawn point runs out of spawns, should it visually change (e.g., hole seals up)?

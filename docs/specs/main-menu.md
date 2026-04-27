@@ -91,8 +91,8 @@ Categories presented as tabs or sections. All values persisted via
 Static rolling text:
 - Game design: Tim Rowsey
 - Engine: Godot 4.6
-- AI workforce: Castlevania squad (Alucard, Sypha, Grant, Trevor, Richter,
-  Shanoa, Julius, Maria)
+- AI workforce: Castlevania squad (Lead, Spec-writer, Architect, Test-writer, Test-reviewer,
+  Implementer, Code-reviewer, Test-runner)
 - Music: TBD
 - "Press any button to return"
 

@@ -50,7 +50,7 @@ func before_each() -> void:
 | `watch_signals(obj)` + `assert_signal_emitted(obj, "sig")` | signal emission tests |
 
 Always pass a third-arg message when the assert isn't self-explanatory —
-it makes Maria's failure reports actionable.
+it makes Test-runner's failure reports actionable.
 
 ## Three canonical patterns
 
@@ -157,11 +157,11 @@ godot --headless -s addons/gut/gut_cmdln.gd \
 > `addons/gut/gut_cmdml.gd` — that's a typo. The real script is
 > `gut_cmdln.gd` (with **n**, not **m**).
 
-## Where Trevor and Richter live
+## Where Test-writer and Test-reviewer live
 
-Tests are written by [Trevor](Squad-And-Agents.md#trevor--test-writer)
+Tests are written by [Test-writer](Squad-And-Agents.md#test-writer--test-writer)
 from the spec alone, then audited by
-[Richter](Squad-And-Agents.md#richter--test-reviewer) for spec coverage
-before any implementation begins. Once Richter approves, tests are
-**frozen** — Maria can't edit them and Shanoa can't "fix" them to make
-the suite pass. If a test is wrong, it goes back to Trevor.
+[Test-reviewer](Squad-And-Agents.md#test-reviewer--test-reviewer) for spec coverage
+before any implementation begins. Once Test-reviewer approves, tests are
+**frozen** — Test-runner can't edit them and Implementer can't "fix" them to make
+the suite pass. If a test is wrong, it goes back to Test-writer.

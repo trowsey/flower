@@ -8,7 +8,7 @@ Pick one of four hand-rolled characters, drop into a procedurally-themed dungeon
 
 ## Scope
 
-- **One programmer + an AI workforce.** See [`AGENTS.md`](../../../AGENTS.md) and `.agents/squads/engineering/` for the TDD agent pipeline (Sypha → Grant → Trevor → Shanoa → Julius → Maria).
+- **One programmer + an AI workforce.** See [`AGENTS.md`](../../../AGENTS.md) and `.agents/squads/engineering/` for the TDD agent pipeline (Spec-writer → Architect → Test-writer → Implementer → Code-reviewer → Test-runner).
 - **Small game, deliberately.** Architectural decisions live in [`docs/architecture.md`](../../architecture.md) and exist to serve a one-person-plus-AI team, not an enterprise project.
 - **No artists yet.** All character sprites are color-tinted placeholders; demons and props are CSG/MeshInstance primitives. The art layer is mockable behind real game logic.
 

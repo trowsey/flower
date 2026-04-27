@@ -9,41 +9,41 @@ files below are the source of truth; this page is the directory.
 
 | Agent | Role | Trigger | Default model |
 |-------|------|---------|---------------|
-| [Alucard](#alucard--lead-orchestrator) | lead | request arrives | sonnet |
-| [Sypha](#sypha--spec-writer) | worker | after Alucard | sonnet |
-| [Grant](#grant--architect) | worker | after Sypha | sonnet |
-| [Trevor](#trevor--test-writer) | worker | after Grant | sonnet |
-| [Richter](#richter--test-reviewer) | evaluator | after Trevor | sonnet |
-| [Shanoa](#shanoa--implementer) | worker | after Richter | sonnet |
-| [Julius](#julius--code-reviewer) | evaluator | after Shanoa | sonnet |
-| [Maria](#maria--test-runner) | worker | after Julius | haiku |
+| [Lead](#lead--lead-orchestrator) | lead | request arrives | sonnet |
+| [Spec-writer](#spec-writer--spec-writer) | worker | after Lead | sonnet |
+| [Architect](#architect--architect) | worker | after Spec-writer | sonnet |
+| [Test-writer](#test-writer--test-writer) | worker | after Architect | sonnet |
+| [Test-reviewer](#test-reviewer--test-reviewer) | evaluator | after Test-writer | sonnet |
+| [Implementer](#implementer--implementer) | worker | after Test-reviewer | sonnet |
+| [Code-reviewer](#code-reviewer--code-reviewer) | evaluator | after Implementer | sonnet |
+| [Test-runner](#test-runner--test-runner) | worker | after Code-reviewer | haiku |
 
 For the order in which they fire, see [Workflow](Workflow.md).
 
 ---
 
-### Alucard — Lead Orchestrator
+### Lead — Lead Orchestrator
 
-Definition: [`alucard.md`](../../../.agents/squads/engineering/alucard.md).
+Definition: [`lead.md`](../../../.agents/squads/engineering/lead.md).
 **Invoke when:** a feature request, bug report, or refactor task arrives
 and needs to enter the pipeline. **Reads:** the raw request, recent
 memory, open issues. **Produces:** clarified requirements, agent
 hand-offs, and the eventual PR. Never writes test or production code
-himself; never merges without Maria's green light.
+himself; never merges without Test-runner's green light.
 
-### Sypha — Spec Writer
+### Spec-writer — Spec Writer
 
-Definition: [`sypha.md`](../../../.agents/squads/engineering/sypha.md).
-**Invoke when:** Alucard hands over clarified requirements. **Reads:**
+Definition: [`spec-writer.md`](../../../.agents/squads/engineering/spec-writer.md).
+**Invoke when:** Lead hands over clarified requirements. **Reads:**
 the requirements, related existing specs, and any code references
 provided. **Produces:** a single file under
 [`docs/specs/<feature>.md`](../../specs) following the
 [Writing Specs](Writing-Specs.md) template. Never describes implementation
 ("HOW") — only behavior ("WHAT").
 
-### Grant — Architect
+### Architect — Architect
 
-Definition: [`grant.md`](../../../.agents/squads/engineering/grant.md).
+Definition: [`architect.md`](../../../.agents/squads/engineering/architect.md).
 **Invoke when:** a spec is ready and needs an architecture pass before
 tests are written. **Reads:** the spec, the proposed approach,
 [`docs/architecture.md`](../../architecture.md) and
@@ -52,47 +52,47 @@ tests are written. **Reads:** the spec, the proposed approach,
 architecture.md §6.5. Default verdict is `APPROVED with MINOR notes` —
 `BLOCKING` is reserved for real principle violations.
 
-### Trevor — Test Writer
+### Test-writer — Test Writer
 
-Definition: [`trevor.md`](../../../.agents/squads/engineering/trevor.md).
+Definition: [`test-writer.md`](../../../.agents/squads/engineering/test-writer.md).
 **Invoke when:** spec + architecture are approved. **Reads:** *only the
 spec* — deliberately blind to implementation. **Produces:**
 `tests/unit/test_<feature>.gd` files following [Writing Tests](Writing-Tests.md).
 Tests must fail before hand-off; a green-from-the-start test is a bug.
 
-### Richter — Test Reviewer
+### Test-reviewer — Test Reviewer
 
-Definition: [`richter.md`](../../../.agents/squads/engineering/richter.md).
-**Invoke when:** Trevor finishes a test file. **Reads:** the spec and the
+Definition: [`test-reviewer.md`](../../../.agents/squads/engineering/test-reviewer.md).
+**Invoke when:** Test-writer finishes a test file. **Reads:** the spec and the
 new tests side by side. **Produces:** a coverage audit (does every
 `REQ-N` map to ≥1 assertion?) plus a quality check (no
-`assert_true(true)`, no inter-test dependencies). Bounces back to Trevor
+`assert_true(true)`, no inter-test dependencies). Bounces back to Test-writer
 if anything's missing.
 
-### Shanoa — Implementer
+### Implementer — Implementer
 
-Definition: [`shanoa.md`](../../../.agents/squads/engineering/shanoa.md).
-**Invoke when:** tests are approved and red. **Reads:** spec + Grant's
+Definition: [`implementer.md`](../../../.agents/squads/engineering/implementer.md).
+**Invoke when:** tests are approved and red. **Reads:** spec + Architect's
 notes + failing tests. **Produces:** the simplest production code that
 turns the suite green. Follows existing patterns ([Coding Standards](Coding-Standards.md))
 and [Resource Patterns](../04-architecture/Resource-Patterns.md). "Make
 it work, then make it right."
 
-### Julius — Code Reviewer
+### Code-reviewer — Code Reviewer
 
-Definition: [`julius.md`](../../../.agents/squads/engineering/julius.md).
-**Invoke when:** Shanoa completes an implementation. **Reads:** the
-diff, the spec, Grant's guidance. **Produces:** prioritized review
-comments (Critical → Medium). Loops with Shanoa until the diff passes.
+Definition: [`code-reviewer.md`](../../../.agents/squads/engineering/code-reviewer.md).
+**Invoke when:** Implementer completes an implementation. **Reads:** the
+diff, the spec, Architect's guidance. **Produces:** prioritized review
+comments (Critical → Medium). Loops with Implementer until the diff passes.
 Adversarial by design — rejecting "ship it" instinct is the job.
 
-### Maria — Test Runner
+### Test-runner — Test Runner
 
-Definition: [`maria.md`](../../../.agents/squads/engineering/maria.md).
-**Invoke when:** Julius approves. **Reads:** the entire repo. **Produces:**
+Definition: [`test-runner.md`](../../../.agents/squads/engineering/test-runner.md).
+**Invoke when:** Code-reviewer approves. **Reads:** the entire repo. **Produces:**
 a pass/fail report from `godot --headless --check-only`, the GUT suite,
 and the autobot. **Cannot modify any file.** If anything is red, hands
-back to Alucard for routing.
+back to Lead for routing.
 
 ---
 

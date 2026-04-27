@@ -1,7 +1,7 @@
 # Writing Specs
 
-Specs are the single source of truth for everything downstream — Trevor
-writes tests from them, Richter audits coverage against them, Shanoa
+Specs are the single source of truth for everything downstream — Test-writer
+writes tests from them, Test-reviewer audits coverage against them, Implementer
 implements from them. **If the spec is wrong, fix the spec first.**
 
 Specs live in [`docs/specs/<feature-name>.md`](../../specs). Browse that
@@ -47,7 +47,7 @@ implementation. Empty section is fine.
 
 ## What "testable from the spec alone" means
 
-Trevor will write tests **without reading any production code**. If the
+Test-writer will write tests **without reading any production code**. If the
 spec doesn't tell him what numbers to assert, what signals to watch, or
 what edge cases to cover, the tests will be wrong.
 
@@ -70,7 +70,7 @@ something.
 ## What a good spec is not
 
 - **Implementation guide.** No file paths, no class names, no "add a
-  helper to `EquipmentManager`". Sypha describes WHAT; Grant and Shanoa
+  helper to `EquipmentManager`". Spec-writer describes WHAT; Architect and Implementer
   decide HOW.
 - **Wishlist.** A spec ships in one PR. Anything bigger is two specs.
 - **Stream of consciousness.** Edits should be possible in one screen of
@@ -89,6 +89,6 @@ Specs evolve. When a request is added or refined:
 
 ## Who owns specs
 
-[Sypha](Squad-And-Agents.md#sypha--spec-writer) writes them. Anyone can
-*propose* a spec, but Sypha + Alucard sign off before tests start. See
+[Spec-writer](Squad-And-Agents.md#spec-writer--spec-writer) writes them. Anyone can
+*propose* a spec, but Spec-writer + Lead sign off before tests start. See
 [Workflow](Workflow.md) for where in the pipeline this happens.

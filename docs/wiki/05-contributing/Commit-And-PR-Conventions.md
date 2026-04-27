@@ -68,11 +68,11 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
   - Link to the spec under `docs/specs/` (or note that this is a
     docs-only / refactor-only PR).
   - List of new or changed test files.
-  - Output of the test run (Maria's report, copy-pasted).
+  - Output of the test run (Test-runner's report, copy-pasted).
   - Any deviations from `docs/architecture.md` or `docs/principles.md`,
     with justification.
 - **Reviewers:** PRs from the agent pipeline have already been through
-  Grant and Julius — a human reviewer should sanity-check, not re-do
+  Architect and Code-reviewer — a human reviewer should sanity-check, not re-do
   their work.
 - **Merge strategy:** **Squash on merge** is the default. The squash
   commit message becomes the canonical record; ensure the trailer
@@ -82,4 +82,4 @@ Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>
 
 - [Workflow](Workflow.md) — what happens before the PR opens.
 - [Writing Specs](Writing-Specs.md) — what the PR's linked spec looks like.
-- [Writing Tests](Writing-Tests.md) — what Maria's test run reports.
+- [Writing Tests](Writing-Tests.md) — what Test-runner's test run reports.

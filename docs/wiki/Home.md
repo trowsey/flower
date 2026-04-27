@@ -51,10 +51,10 @@ that's a bug. [Open an issue](../../issues/new) or fix it.
 ### 🤖 Agents
 1. [Squad & Agents](05-contributing/Squad-And-Agents.md) — who does what in the engineering pipeline
 2. [Workflow](05-contributing/Workflow.md) — the TDD loop you must follow
-3. [Writing Specs](05-contributing/Writing-Specs.md) — sypha's template
-4. [Writing Tests](05-contributing/Writing-Tests.md) — trevor's patterns
-5. [Coding Standards](05-contributing/Coding-Standards.md) — shanoa's style
-6. [Architecture Guide](04-architecture/Architecture-Guide.md) — grant's compass
+3. [Writing Specs](05-contributing/Writing-Specs.md) — spec-writer's template
+4. [Writing Tests](05-contributing/Writing-Tests.md) — test-writer's patterns
+5. [Coding Standards](05-contributing/Coding-Standards.md) — implementer's style
+6. [Architecture Guide](04-architecture/Architecture-Guide.md) — architect's compass
 
 ---
 

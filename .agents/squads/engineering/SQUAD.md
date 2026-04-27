@@ -1,6 +1,6 @@
 ---
 name: Engineering
-lead: alucard
+lead: lead
 channel: "#engineering"
 model: sonnet
 effort: high
@@ -52,26 +52,26 @@ If preflight is red before your change, fix preflight first (or escalate).
 
 | Agent | Role | Purpose |
 |-------|------|---------|
-| alucard | lead | Orchestrates the TDD pipeline, gathers requirements, coordinates all agents |
-| sypha | worker | Writes testable specifications from requirements |
-| grant | worker | Reviews architectural decisions for simplicity and correctness |
-| trevor | worker | Writes failing tests from specs (TDD red phase) |
-| richter | evaluator | Reviews tests for completeness against the spec |
-| shanoa | worker | Implements code to make tests pass (TDD green phase) |
-| julius | evaluator | Adversarial code review of implementations |
-| maria | worker | Runs all tests, validates everything passes (read-only) |
+| lead | lead | Orchestrates the TDD pipeline, gathers requirements, coordinates all agents |
+| spec-writer | worker | Writes testable specifications from requirements |
+| architect | worker | Reviews architectural decisions for simplicity and correctness |
+| test-writer | worker | Writes failing tests from specs (TDD red phase) |
+| test-reviewer | evaluator | Reviews tests for completeness against the spec |
+| implementer | worker | Implements code to make tests pass (TDD green phase) |
+| code-reviewer | evaluator | Adversarial code review of implementations |
+| test-runner | worker | Runs all tests, validates everything passes (read-only) |
 
 ## TDD Pipeline
 
 ```
-Request → alucard (gather requirements)
-       → sypha (write spec) ↔ alucard (clarification loop)
-       → grant (architecture review) ↔ alucard (design loop)
-       → trevor (write failing tests from spec)
-       → richter (review tests against spec)
-       → shanoa (implement code to pass tests)
-       → julius (code review) ↔ shanoa (review loop)
-       → maria (run all tests — no modifications allowed)
+Request → lead (gather requirements)
+       → spec-writer (write spec) ↔ lead (clarification loop)
+       → architect (architecture review) ↔ lead (design loop)
+       → test-writer (write failing tests from spec)
+       → test-reviewer (review tests against spec)
+       → implementer (implement code to pass tests)
+       → code-reviewer (code review) ↔ implementer (review loop)
+       → test-runner (run all tests — no modifications allowed)
        → PR on GitHub
 ```
 

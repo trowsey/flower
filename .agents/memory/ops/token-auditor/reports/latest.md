@@ -1,14 +1,14 @@
 # Token Audit Report
 
 Total files scanned: **160**  
-Total tokens: **133,409** (cl100k_base)
+Total tokens: **133,454** (cl100k_base)
 
 ## By area
 
 | Area | Tokens | % |
 |------|--------|---|
-| docs | 106,384 | 79% |
-| squads | 14,397 | 10% |
+| docs | 106,423 | 79% |
+| squads | 14,403 | 10% |
 | skills | 6,834 | 5% |
 | root | 3,238 | 2% |
 | memory | 1,840 | 1% |
@@ -26,10 +26,10 @@ Total tokens: **133,409** (cl100k_base)
 | `docs/wiki/06-reference/Spec-Index.md` | 2,454 | 114 | 21 |
 | `.agents/skills/flower-debug/SKILL.md` | 2,324 | 205 | 11 |
 | `.agents/skills/squads-cli/SKILL.md` | 2,261 | 330 | 6 |
-| `docs/specs/demon-spawning.md` | 2,228 | 239 | 9 |
+| `docs/specs/demon-spawning.md` | 2,229 | 239 | 9 |
 | `docs/wiki/04-architecture/Signals-Catalog.md` | 2,122 | 157 | 13 |
-| `docs/wiki/02-getting-started/Repo-Layout.md` | 2,083 | 177 | 11 |
-| `docs/specs/demon-assets.md` | 2,046 | 190 | 10 |
+| `docs/wiki/02-getting-started/Repo-Layout.md` | 2,084 | 177 | 11 |
+| `docs/specs/demon-assets.md` | 2,051 | 190 | 10 |
 | `.agents/skills/squads-cli/references/commands.md` | 1,852 | 182 | 10 |
 | `AGENTS.md` | 1,767 | 154 | 11 |
 | `docs/wiki/06-reference/Test-Index.md` | 1,722 | 67 | 25 |
@@ -64,10 +64,10 @@ location.
 - `docs/wiki/06-reference/Spec-Index.md` — 2,454 tokens
 - `.agents/skills/flower-debug/SKILL.md` — 2,324 tokens
 - `.agents/skills/squads-cli/SKILL.md` — 2,261 tokens
-- `docs/specs/demon-spawning.md` — 2,228 tokens
+- `docs/specs/demon-spawning.md` — 2,229 tokens
 - `docs/wiki/04-architecture/Signals-Catalog.md` — 2,122 tokens
-- `docs/wiki/02-getting-started/Repo-Layout.md` — 2,083 tokens
-- `docs/specs/demon-assets.md` — 2,046 tokens
+- `docs/wiki/02-getting-started/Repo-Layout.md` — 2,084 tokens
+- `docs/specs/demon-assets.md` — 2,051 tokens
 
 ---
 

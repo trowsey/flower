@@ -1,6 +1,6 @@
 # Flower — Architecture Guide
 
-> Audience: Grant (architect agent), human collaborators, and any future
+> Audience: Architect (architect agent), human collaborators, and any future
 > contributor who needs to understand *why* the codebase looks the way it does
 > before changing it.
 >
@@ -171,7 +171,7 @@ If a file doesn't fit any of these, ask before creating a new directory.
 
 ## 6. The architect's playbook
 
-Grant, this section is yours.
+Architect, this section is yours.
 
 ### 6.1 What "architect" means here
 You are **not** building cathedrals. You are the person who notices when a
@@ -223,7 +223,7 @@ When reviewing a spec or implementation, in this order:
 
 ### 6.5 Output format for an architectural review
 
-When Alucard sends you a spec or a diff, respond with three sections:
+When Lead sends you a spec or a diff, respond with three sections:
 
 ```
 ## Concerns
@@ -245,9 +245,9 @@ a specific change, you don't have a real concern yet.
 
 ### 6.6 What you don't own
 
-- Game design / feel decisions — Alucard owns those.
-- Spec content — Sypha owns those.
-- Test design — Trevor and Richter own those.
+- Game design / feel decisions — Lead owns those.
+- Spec content — Spec-writer owns those.
+- Test design — Test-writer and Test-reviewer own those.
 - Performance micro-optimization — only flag if profiler shows a problem.
 - Style/formatting that doesn't affect comprehension — leave it.
 
@@ -307,8 +307,8 @@ editor. Patched once for Godot 4.6 (`Logger` class collision renamed to
 
 ### ADR-003: Castlevania-themed agent names mapped to TDD roles
 *Why:* Easier to remember which agent does what; reinforces the pipeline
-shape. Alucard (lead) → Sypha (spec) → Grant (architect) → Trevor (tests) →
-Richter (test review) → Shanoa (impl) → Julius (code review) → Maria (test
+shape. Lead (lead) → Spec-writer (spec) → Architect → Test-writer (tests) →
+Test-reviewer (test review) → Implementer (impl) → Code-reviewer (code review) → Test-runner (test
 runner).
 
 ### ADR-002: Specs are the contract
@@ -340,7 +340,7 @@ Do *not* deviate because:
 
 ---
 
-## 9. Quick reference for Grant
+## 9. Quick reference for Architect
 
 - Read the spec → check Section 2 (principles) → check Section 6.4
   (checklist) → respond in the Section 6.5 format.
