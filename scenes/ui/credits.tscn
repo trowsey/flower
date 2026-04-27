@@ -1,0 +1,50 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/credits.gd" id="1"]
+
+[node name="Credits" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.06, 0.04, 0.08, 1)
+
+[node name="Center" type="CenterContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(520, 0)
+alignment = 1
+
+[node name="Title" type="Label" parent="Center/VBox"]
+text = "CREDITS"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 36
+
+[node name="Spacer" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 16)
+
+[node name="Body" type="Label" parent="Center/VBox"]
+horizontal_alignment = 1
+text = "FLOWER
+
+Game design  —  Tim Rowsey
+Engine       —  Godot 4.6
+AI workforce —  Castlevania squad
+                Alucard, Sypha, Grant, Trevor,
+                Richter, Shanoa, Julius, Maria
+
+Music & art  —  TBD
+
+Built with the Squads-CLI agent framework."
+
+[node name="Spacer2" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(0, 24)
+
+[node name="Back" type="Button" parent="Center/VBox"]
+text = "Back"
+custom_minimum_size = Vector2(0, 36)

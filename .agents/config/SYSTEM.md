@@ -10,9 +10,9 @@ Immutable rules for all agent executions. Every agent reads this before starting
 
 ## Before You Start
 
-Read `.agents/BUSINESS_BRIEF.md`. If it contains "PLACEHOLDER" in the first lines, STOP and tell the user:
-"Edit .agents/BUSINESS_BRIEF.md with your business details before running agents."
-Do not produce generic output from placeholder context.
+Read `.agents/BUSINESS_BRIEF.md` and `AGENTS.md`. The repo-root
+`AGENTS.md` is the always-loaded surface — Required Reading,
+Baseline Commands, Known Gotchas, Hot Files.
 
 ## Git Workflow
 
@@ -45,10 +45,11 @@ git push origin main
 ## Escalation
 
 Escalate to the human operator when:
-- Spend exceeds $50 in a single session
 - Scope is unclear or contradicts business goals
 - A destructive action is needed (deleting data, overwriting work)
 - You're unsure whether to proceed
+- Confidence in the proposed change is `low` or `very low` per
+  `.agents/config/CONFIDENCE.md`
 
 ## Coordination
 

@@ -4,6 +4,10 @@
 [ext_resource type="Script" path="res://scripts/camera.gd" id="2"]
 [ext_resource type="Texture2D" path="res://assets/dungeon_floor.png" id="3"]
 [ext_resource type="Texture2D" path="res://assets/dungeon_wall.png" id="4"]
+[ext_resource type="Script" path="res://scripts/main.gd" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/ui/pause_menu.tscn" id="6"]
+[ext_resource type="PackedScene" path="res://scenes/ui/game_hud.tscn" id="7"]
+[ext_resource type="PackedScene" path="res://scenes/ui/game_over_screen.tscn" id="8"]
 
 [sub_resource type="StandardMaterial3D" id="FloorMaterial"]
 albedo_texture = ExtResource("3")
@@ -48,6 +52,7 @@ ambient_light_color = Color(0.4, 0.35, 0.3, 1)
 ambient_light_energy = 0.35
 
 [node name="Main" type="Node3D"]
+script = ExtResource("5")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = SubResource("Environment_1")
@@ -167,3 +172,9 @@ omni_attenuation = 1.5
 projection = 1
 size = 12.0
 script = ExtResource("2")
+
+[node name="PauseMenu" parent="." instance=ExtResource("6")]
+
+[node name="GameHUD" parent="." instance=ExtResource("7")]
+
+[node name="GameOverScreen" parent="." instance=ExtResource("8")]

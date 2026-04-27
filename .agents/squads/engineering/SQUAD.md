@@ -1,6 +1,6 @@
 ---
 name: Engineering
-lead: issue-solver
+lead: lead
 channel: "#engineering"
 model: sonnet
 effort: high
@@ -25,25 +25,59 @@ approvals:
     files_changed: 20
 ---
 
-# Engineering
+# Engineering — The Castlevania Squad
 
-Ships code. Solves issues, reviews PRs, and maintains code quality.
+Ships code through test-driven development. Every feature follows the full TDD pipeline: spec → architecture → failing tests → implementation → review → validation → PR.
 
 ## Goals
 
-- [ ] **First run — Squad evaluation**: audit repo state (open issues, test coverage, CI health, tech debt, security surface) against `BUSINESS_BRIEF.md` and produce a baseline engineering report with top 3 priorities
-- [ ] Solve open GitHub issues with PRs
-- [ ] Maintain code quality through adversarial review
-- [ ] Keep test coverage high
+- [ ] Maintain 100% spec coverage — every feature has a testable spec
+- [ ] Maintain full test coverage via TDD — tests written before code
+- [ ] Keep architecture simple, readable, and Godot-idiomatic
+- [ ] Ship quality code through adversarial review
+
+## Definition of Done
+
+A change is **done** when:
+
+1. `./scripts/preflight.sh` exits green (parse-check + GUT + both autobots).
+2. New tests have been added for new behavior, and they pass.
+3. Any autobot/test failures introduced by the change are fixed in the same commit — never deferred to "baseline noise."
+4. `docs/architecture.md` is updated if the change affects autoloads, signal topology, or the system map.
+5. The commit message explains *why*, not just *what*.
+
+If preflight is red before your change, fix preflight first (or escalate).
 
 ## Agents
 
 | Agent | Role | Purpose |
 |-------|------|---------|
-| issue-solver | lead | Reads open issues, creates PRs with fixes |
-| code-reviewer | evaluator | Reviews PRs for quality, security, and correctness |
-| test-writer | doer | Writes tests for untested code paths |
+| lead | lead | Orchestrates the TDD pipeline, gathers requirements, coordinates all agents |
+| spec-writer | worker | Writes testable specifications from requirements |
+| architect | worker | Reviews architectural decisions for simplicity and correctness |
+| test-writer | worker | Writes failing tests from specs (TDD red phase) |
+| test-reviewer | evaluator | Reviews tests for completeness against the spec |
+| implementer | worker | Implements code to make tests pass (TDD green phase) |
+| code-reviewer | evaluator | Adversarial code review of implementations |
+| test-runner | worker | Runs all tests, validates everything passes (read-only) |
 
-## Pipeline
+## TDD Pipeline
 
-`issue-solver` fixes → `code-reviewer` reviews → `test-writer` covers
+```
+Request → lead (gather requirements)
+       → spec-writer (write spec) ↔ lead (clarification loop)
+       → architect (architecture review) ↔ lead (design loop)
+       → test-writer (write failing tests from spec)
+       → test-reviewer (review tests against spec)
+       → implementer (implement code to pass tests)
+       → code-reviewer (code review) ↔ implementer (review loop)
+       → test-runner (run all tests — no modifications allowed)
+       → PR on GitHub
+```
+
+## Testing
+
+- Framework: GUT (Godot Unit Testing)
+- Tests: `tests/unit/` and `tests/integration/`
+- Naming: `test_{feature}.gd` with `test_{requirement}_{scenario}()` functions
+- Run: `godot --headless --script addons/gut/gut_cmdln.gd -gdir=res://tests -gexit`

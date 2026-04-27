@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="GutConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://addons/gut/gut_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+dirs = ["res://tests/unit", "res://tests/integration"]
+prefix = "test_"
+suffix = ".gd"
+include_subdirs = true
+log_level = 1
+should_exit = true
+should_exit_on_success = false
