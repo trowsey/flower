@@ -23,6 +23,17 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 	if not player or slots.size() == 0:
 		return
+	# Early-out: if no skills assigned and no cooldowns active, nothing to do.
+	var any_active := false
+	for i in min(4, slots.size()):
+		if i < player.skills.size() and player.skills[i] != null:
+			any_active = true
+			break
+		if i < player.skill_cooldowns.size() and player.skill_cooldowns[i] > 0.0:
+			any_active = true
+			break
+	if not any_active:
+		return
 	for i in min(4, slots.size()):
 		var slot := slots[i]
 		var cd_label: Label = slot.get_node_or_null("Cooldown") as Label

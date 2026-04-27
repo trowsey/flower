@@ -35,9 +35,11 @@ var _player_count: int = 1
 var current_wave: int = 1
 var run_stats: Node = null  # RunStats; untyped to avoid class_name resolution under custom SceneTree
 var biome_manager: Node = null  # BiomeManager; same reason
+var _enemy_count: int = 0  # Maintained via _track_enemy(); avoids per-frame group scans
 signal wave_started(wave: int)
 signal wave_cleared(wave: int)
 signal biome_changed(biome: Resource)
+signal enemy_count_changed(count: int)
 
 
 func _ready() -> void:
@@ -128,8 +130,9 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# Respawn a wave when no enemies remain
-	if get_tree().get_nodes_in_group("enemies").size() == 0:
+	# Respawn a wave when no enemies remain. _enemy_count is maintained
+	# via _track_enemy() — we no longer scan get_nodes_in_group every frame.
+	if _enemy_count == 0:
 		_wave_timer += delta
 		if _wave_timer >= WAVE_RESPAWN_DELAY:
 			_wave_timer = 0.0
@@ -142,6 +145,23 @@ func _process(delta: float) -> void:
 			_spawn_wave()
 	else:
 		_wave_timer = 0.0
+
+
+func _track_enemy(enemy: Node) -> void:
+	# Hooks an enemy's tree_exited signal to keep _enemy_count accurate
+	# without scanning the scene tree every frame.
+	_enemy_count += 1
+	enemy_count_changed.emit(_enemy_count)
+	enemy.tree_exited.connect(_on_tracked_enemy_exited)
+
+
+func _on_tracked_enemy_exited() -> void:
+	_enemy_count = max(0, _enemy_count - 1)
+	enemy_count_changed.emit(_enemy_count)
+
+
+func enemy_count() -> int:
+	return _enemy_count
 
 
 func _spawn_wave() -> void:
@@ -188,6 +208,7 @@ func _spawn_wave() -> void:
 		var pos := Vector3(cos(angle), 0, sin(angle)) * SPAWN_RING_RADIUS
 		add_child(enemy)
 		enemy.global_position = pos + Vector3(0, 0.5, 0)
+		_track_enemy(enemy)
 		# Hook tree_exiting once for kill stats
 		enemy.tree_exiting.connect(func(): _on_enemy_removed(enemy))
 	emit_signal("wave_started", current_wave)

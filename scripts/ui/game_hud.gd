@@ -110,6 +110,8 @@ var _panels: Array = []
 var _wave_label: Label
 var _enemy_label: Label
 var _timer_label: Label
+var _run_stats: Node = null  # cached at _ready, avoids per-frame current_scene lookup
+var _timer_accum: float = 0.0  # throttle timer label refresh to ~5 Hz
 
 
 func _ready() -> void:
@@ -146,10 +148,24 @@ func _build_wave_banner() -> void:
 
 func _wire_main_signals() -> void:
 	var main := get_tree().current_scene
-	if main and main.has_signal("wave_started"):
-		main.wave_started.connect(_on_wave_started)
-	if main and main.has_signal("biome_changed"):
-		main.biome_changed.connect(_on_biome_changed)
+	if main:
+		if main.has_signal("wave_started"):
+			main.wave_started.connect(_on_wave_started)
+		if main.has_signal("biome_changed"):
+			main.biome_changed.connect(_on_biome_changed)
+		if main.has_signal("enemy_count_changed"):
+			main.enemy_count_changed.connect(_on_enemy_count_changed)
+		if "run_stats" in main:
+			_run_stats = main.run_stats
+	# Initialize labels with current state so we don't rely on first frame.
+	if main and "enemy_count" in main:
+		_on_enemy_count_changed(main._enemy_count)
+
+
+func _on_enemy_count_changed(n: int) -> void:
+	if not _enemy_label:
+		return
+	_enemy_label.text = "Enemies: %d" % n if n > 0 else "Wave clear — next in 8s"
 
 
 func _on_wave_started(wave: int) -> void:
@@ -209,14 +225,13 @@ func _wire_signals(p: Node, panel: PlayerPanel) -> void:
 		p.level_up.connect(func(_v): panel._refresh())
 
 
-func _process(_delta: float) -> void:
-	# Skill cooldowns tick continuously
+func _process(delta: float) -> void:
+	# Skill cooldowns tick continuously (cheap; just label updates)
 	for panel in _panels:
 		panel.update_skills()
-	if _enemy_label:
-		var n := get_tree().get_nodes_in_group("enemies").size()
-		_enemy_label.text = "Enemies: %d" % n if n > 0 else "Wave clear — next in 8s"
-	if _timer_label:
-		var main := get_tree().current_scene
-		if main and "run_stats" in main and main.run_stats:
-			_timer_label.text = main.run_stats.format_time()
+	# Timer label only needs ~5 Hz refresh; format_time() is "MM:SS"
+	if _timer_label and _run_stats:
+		_timer_accum += delta
+		if _timer_accum >= 0.2:
+			_timer_accum = 0.0
+			_timer_label.text = _run_stats.format_time()
