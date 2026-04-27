@@ -35,6 +35,7 @@ const CRIT_MULTIPLIER := 2.0
 # Loot magnet: gold/items within MAGNET_RADIUS get pulled toward player
 const MAGNET_RADIUS := 3.0
 const MAGNET_SPEED := 6.0
+const MAGNET_INTERVAL := 0.066  # ~15 Hz throttle
 
 enum PlayerState { NORMAL, BEING_DRAINED, SOUL_DEAD, HEALTH_DEAD, DOWNED, DASHING }
 
@@ -86,6 +87,7 @@ var state: int = PlayerState.NORMAL
 var _moving := false
 var _attacking := false
 var _direct_move := false
+var _magnet_accum: float = 0.0
 var _facing_dir := Vector3.FORWARD
 var _latched_demon: Node3D = null
 var _soul_at_latch_start := 100.0
@@ -853,14 +855,24 @@ func _process_revive(delta: float) -> void:
 # --- Loot magnet ---
 
 func _process_magnet(_delta: float) -> void:
+	# Throttle to ~15 Hz — pickup motion is visually smooth via tween below.
+	# Use distance_squared to skip per-pickup sqrt for early-out.
+	_magnet_accum += _delta
+	if _magnet_accum < MAGNET_INTERVAL:
+		return
+	var step: float = _magnet_accum
+	_magnet_accum = 0.0
 	var radius: float = SettingsScript.get_loot_magnet_radius() if SettingsScript else MAGNET_RADIUS
+	var radius_sq: float = radius * radius
 	for pickup in get_tree().get_nodes_in_group("pickups"):
 		if not is_instance_valid(pickup):
 			continue
-		var dist: float = pickup.global_position.distance_to(global_position)
-		if dist <= radius and dist > 0.4:
-			var dir: Vector3 = (global_position - pickup.global_position).normalized()
-			pickup.global_position += dir * MAGNET_SPEED * _delta
+		var delta_vec: Vector3 = pickup.global_position - global_position
+		var dist_sq: float = delta_vec.length_squared()
+		if dist_sq > radius_sq or dist_sq <= 0.16:  # 0.4^2
+			continue
+		var dir: Vector3 = -delta_vec / sqrt(dist_sq)
+		pickup.global_position += dir * MAGNET_SPEED * step
 
 # --- Signature skill implementations ---
 

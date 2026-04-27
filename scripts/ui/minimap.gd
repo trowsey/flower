@@ -11,6 +11,8 @@ class_name Minimap
 
 var fog: FogOfWar = null
 var player: Node3D = null
+var _redraw_accum: float = 0.0
+const REDRAW_INTERVAL := 0.1  # 10 Hz; visually indistinguishable from 60 Hz
 
 
 func _ready() -> void:
@@ -24,8 +26,11 @@ func _ready() -> void:
 			player = players[0]
 
 
-func _process(_delta: float) -> void:
-	queue_redraw()
+func _process(delta: float) -> void:
+	_redraw_accum += delta
+	if _redraw_accum >= REDRAW_INTERVAL:
+		_redraw_accum = 0.0
+		queue_redraw()
 
 
 func _draw() -> void:

@@ -9,12 +9,24 @@ extends Camera3D
 var _target: Node3D
 var _shake: CameraShake = null
 var _hit_stop_end_ms: int = 0
+# Cached per-frame so we don't call get_nodes_in_group three times per
+# physics tick (was: _get_focus_point + _get_player_spread + size-check).
+var _players_cache: Array = []
+var _players_cache_frame: int = -1
+
+
+func _refresh_players_cache() -> void:
+	var f := Engine.get_physics_frames()
+	if f == _players_cache_frame:
+		return
+	_players_cache_frame = f
+	_players_cache = get_tree().get_nodes_in_group("player")
 
 
 func _ready() -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() > 0:
-		_target = players[0]
+	_refresh_players_cache()
+	if _players_cache.size() > 0:
+		_target = _players_cache[0]
 	if _target:
 		global_position = _get_focus_point() + offset
 		look_at(_get_focus_point())
@@ -26,12 +38,11 @@ func _ready() -> void:
 
 
 func _get_focus_point() -> Vector3:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() == 0:
+	if _players_cache.size() == 0:
 		return _target.global_position if _target else Vector3.ZERO
 	var sum := Vector3.ZERO
 	var n: int = 0
-	for p in players:
+	for p in _players_cache:
 		if not is_instance_valid(p):
 			continue
 		sum += p.global_position
@@ -42,12 +53,11 @@ func _get_focus_point() -> Vector3:
 
 
 func _get_player_spread() -> float:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.size() < 2:
+	if _players_cache.size() < 2:
 		return 0.0
 	var center := _get_focus_point()
 	var max_d: float = 0.0
-	for p in players:
+	for p in _players_cache:
 		if is_instance_valid(p):
 			max_d = max(max_d, p.global_position.distance_to(center))
 	return max_d
@@ -76,7 +86,8 @@ func _on_request_hit_stop(duration: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if get_tree().get_nodes_in_group("player").size() == 0 and not _target:
+	_refresh_players_cache()
+	if _players_cache.size() == 0 and not _target:
 		return
 	var focus: Vector3 = _get_focus_point()
 	var zoom_extra: float = clamp(
